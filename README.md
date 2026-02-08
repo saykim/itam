@@ -63,7 +63,6 @@ python app.py
 
 ## 👤 개발자 정보 (Contributors)
 - **Project Owner**: Say Kim
-- **Co-Developer**: Antigravity AI
 - **Repository**: [https://github.com/saykim/itam](https://github.com/saykim/itam)
 
 ## 📅 최종 업데이트 (Last Updated)
