@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITAM - IT 자산관리 시스템</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563EB;
+            --primary-dark: #1D4ED8;
+            --primary-light: #DBEAFE;
+            --success: #059669;
+            --success-light: #D1FAE5;
+            --warning: #D97706;
+            --warning-light: #FEF3C7;
+            --danger: #DC2626;
+            --danger-light: #FEE2E2;
+            --info: #0891B2;
+            --info-light: #CFFAFE;
+            --gray-50: #F8FAFC;
+            --gray-100: #F1F5F9;
+            --gray-200: #E2E8F0;
+            --gray-300: #CBD5E1;
+            --gray-400: #94A3B8;
+            --gray-500: #64748B;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1E293B;
+            --gray-900: #0F172A;
+            --sidebar-width: 240px;
+            --radius: 8px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--gray-100);
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--gray-800) 0%, var(--gray-700) 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 24px;
+        }
+
+        /* Sidebar */
+        .logo {
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-section {
+            padding: 16px 0;
+        }
+
+        .nav-section-title {
+            padding: 8px 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--gray-300);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--gray-300);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-item i {
+            width: 24px;
+            margin-right: 12px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            color: var(--gray-800);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Cards */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .card-value.success {
+            color: var(--success);
+        }
+
+        .card-value.warning {
+            color: var(--warning);
+        }
+
+        .card-value.danger {
+            color: var(--danger);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+            border-color: var(--gray-400);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--gray-800);
+            font-weight: 700;
+            color: white;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--primary-light);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-600);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Status Badge */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-danger {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .badge-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        /* Charts */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--gray-800);
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        /* License Gauge */
+        .license-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .license-bar {
+            width: 150px;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .license-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* Activity Feed */
+        .activity-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .activity-text {
+            font-size: 0.875rem;
+            color: var(--gray-800);
+            margin-top: 4px;
+        }
+
+        /* Search & Filter */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 10px 14px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            min-width: 250px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--gray-600);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Page sections */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            color: var(--gray-600);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Detail Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 24px;
+        }
+
+        .info-item {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--gray-200);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 12px 0 12px 16px;
+            border-bottom: none;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 16px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid white;
+            z-index: 1;
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .timeline-action {
+            font-weight: 500;
+            color: var(--gray-800);
+            margin-top: 4px;
+        }
+
+        .timeline-detail {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            margin-top: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar .nav-item span,
+            .sidebar .nav-section-title,
+            .sidebar .logo span {
+                display: none;
+            }
+
+            .main {
+                margin-left: 60px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">📊 <span>ITAM</span></div>
+            <div class="nav-section">
+                <div class="nav-item active" data-page="dashboard">📊 <span>대시보드</span></div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">자산관리</div>
+                <div class="nav-item" data-page="assets">💻 <span>HW 자산</span></div>
+                <div class="nav-item" data-page="licenses">📜 <span>SW 라이선스</span></div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">기준정보</div>
+                <div class="nav-item" data-page="locations">🏢 <span>사업장</span></div>
+                <div class="nav-item" data-page="departments">🏛️ <span>부서</span></div>
+                <div class="nav-item" data-page="users">👤 <span>사용자</span></div>
+                <div class="nav-item" data-page="categories">📁 <span>카테고리</span></div>
+                <div class="nav-item" data-page="vendors">🏪 <span>공급업체</span></div>
+                <div class="nav-item" data-page="eos">⏰ <span>EOS 정보</span></div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">관리</div>
+                <div class="nav-item" data-page="inventories">📋 <span>실사관리</span></div>
+                <div class="nav-item" data-page="notifications">🔔 <span>알림</span></div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page active">
+                <div class="header">
+                    <h1>대시보드</h1>
+                </div>
+                <div class="cards" id="summary-cards"></div>
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <div class="chart-title">카테고리별 자산 현황</div>
+                        <canvas id="categoryChart" height="200"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">라이선스 현황</div>
+                        <div id="licenseStatus"></div>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <div class="chart-title">⚠️ 사용연한 초과</div>
+                        <div id="usefulLifeExpired"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">🕐 OS EOS 현황</div>
+                        <div id="eosStatus"></div>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <div class="chart-title">🏢 사업장별 자산 현황</div>
+                        <canvas id="locationChart" height="180"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">👥 부서별 자산 현황</div>
+                        <canvas id="departmentChart" height="180"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container" style="margin-top:20px">
+                    <div class="chart-title">최근 활동</div>
+                    <div id="recentActivity"></div>
+                </div>
+            </div>
+
+            <!-- Assets Page -->
+            <div id="page-assets" class="page">
+                <div class="header">
+                    <h1>HW 자산 관리</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="downloadTemplate('hw')">📥 템플릿</button>
+                        <button class="btn btn-secondary" onclick="openImportModal('asset')">📤 Import</button>
+                        <button class="btn btn-secondary" onclick="exportAssets()">📊 Export</button>
+                        <button class="btn btn-primary" onclick="openAssetModal()">+ 자산 등록</button>
+                    </div>
+                </div>
+                <div class="filters">
+                    <input type="text" class="search-input" id="assetSearch" placeholder="자산번호, 자산명, 시리얼 검색..."
+                        onkeyup="loadAssets()">
+                    <select class="form-select" style="width:150px" id="assetLocationFilter" onchange="loadAssets()">
+                        <option value="">전체 사업장</option>
+                    </select>
+                    <select class="form-select" style="width:150px" id="assetStatusFilter" onchange="loadAssets()">
+                        <option value="">전체 상태</option>
+                        <option value="사용중">사용중</option>
+                        <option value="여유">여유</option>
+                        <option value="수리중">수리중</option>
+                        <option value="폐기예정">폐기예정</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>자산번호</th>
+                                <th>자산명</th>
+                                <th>카테고리</th>
+                                <th>상태</th>
+                                <th>사업장</th>
+                                <th>사용자</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Licenses Page -->
+            <div id="page-licenses" class="page">
+                <div class="header">
+                    <h1>SW 라이선스 관리</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="downloadTemplate('license')">📥 템플릿</button>
+                        <button class="btn btn-secondary" onclick="openImportModal('license')">📤 Import</button>
+                        <button class="btn btn-secondary" onclick="exportLicenses()">📊 Export</button>
+                        <button class="btn btn-primary" onclick="openLicenseModal()">+ 라이선스 등록</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>관리번호</th>
+                                <th>소프트웨어명</th>
+                                <th>유형</th>
+                                <th>총수량</th>
+                                <th>사용</th>
+                                <th>가용</th>
+                                <th>상태</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licensesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Locations Page -->
+            <div id="page-locations" class="page">
+                <div class="header">
+                    <h1>사업장 관리</h1>
+                    <button class="btn btn-primary" onclick="openLocationModal()">+ 사업장 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>코드</th>
+                                <th>사업장명</th>
+                                <th>주소</th>
+                                <th>건물</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="locationsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Departments Page -->
+            <div id="page-departments" class="page">
+                <div class="header">
+                    <h1>부서 관리</h1>
+                    <button class="btn btn-primary" onclick="openDeptModal()">+ 부서 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>코드</th>
+                                <th>부서명</th>
+                                <th>레벨</th>
+                                <th>사업장</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div id="page-users" class="page">
+                <div class="header">
+                    <h1>사용자 관리</h1>
+                    <button class="btn btn-primary" onclick="openUserModal()">+ 사용자 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>사번</th>
+                                <th>이름</th>
+                                <th>이메일</th>
+                                <th>부서</th>
+                                <th>사업장</th>
+                                <th>상태</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Categories Page -->
+            <div id="page-categories" class="page">
+                <div class="header">
+                    <h1>카테고리 관리</h1>
+                    <button class="btn btn-primary" onclick="openCategoryModal()">+ 카테고리 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>코드</th>
+                                <th>카테고리명</th>
+                                <th>레벨</th>
+                                <th>자산유형</th>
+                                <th>상위 카테고리</th>
+                                <th>사용연한(월)</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vendors Page -->
+            <div id="page-vendors" class="page">
+                <div class="header">
+                    <h1>공급업체 관리</h1>
+                    <button class="btn btn-primary" onclick="openVendorModal()">+ 공급업체 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>업체명</th>
+                                <th>구분</th>
+                                <th>담당자</th>
+                                <th>연락처</th>
+                                <th>이메일</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vendorsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- EOS Page -->
+            <div id="page-eos" class="page">
+                <div class="header">
+                    <h1>EOS 정보 관리</h1>
+                    <button class="btn btn-primary" onclick="openEOSModal()">+ EOS 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>제품명</th>
+                                <th>버전</th>
+                                <th>유형</th>
+                                <th>제조사</th>
+                                <th>EOS 날짜</th>
+                                <th>비고</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eosTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Inventories Page -->
+            <div id="page-inventories" class="page">
+                <div class="header">
+                    <h1>실사 관리</h1>
+                    <button class="btn btn-primary" onclick="openInventoryModal()">+ 실사 일정 등록</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>실사명</th>
+                                <th>유형</th>
+                                <th>기간</th>
+                                <th>담당자</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoriesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notifications Page -->
+            <div id="page-notifications" class="page">
+                <div class="header">
+                    <h1>알림 센터</h1>
+                    <button class="btn btn-secondary" onclick="readAllNotifications()">모두 읽음</button>
+                </div>
+                <div class="table-container">
+                    <div id="notificationsList" style="padding:20px"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="assetModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>자산 등록</h3><button class="modal-close" onclick="closeModal('assetModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="assetForm">
+                    <div class="form-group"><label class="form-label">자산명 *</label><input type="text" class="form-input"
+                            name="asset_name" required></div>
+                    <div class="form-group"><label class="form-label">카테고리 *</label><select class="form-select"
+                            name="category_id" required id="assetCategorySelect"></select></div>
+                    <div class="form-group"><label class="form-label">사업장 *</label><select class="form-select"
+                            name="location_id" required id="assetLocationSelect"></select></div>
+                    <div class="form-group"><label class="form-label">상태</label>
+                        <select class="form-select" name="asset_status">
+                            <option>신규</option>
+                            <option>사용중</option>
+                            <option>여유</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">제조사</label><input type="text" class="form-input"
+                            name="manufacturer"></div>
+                    <div class="form-group"><label class="form-label">모델명</label><input type="text" class="form-input"
+                            name="model_name"></div>
+                    <div class="form-group"><label class="form-label">시리얼번호</label><input type="text" class="form-input"
+                            name="serial_number"></div>
+                    <div class="form-group"><label class="form-label">구매일</label><input type="date" class="form-input"
+                            name="purchase_date"></div>
+                    <div class="form-group"><label class="form-label">관리담당자 *</label><select class="form-select"
+                            name="asset_manager_id" required id="assetManagerSelect"></select></div>
+                    <input type="hidden" name="asset_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('assetModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveAsset()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="licenseModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>라이선스 등록</h3><button class="modal-close" onclick="closeModal('licenseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="licenseForm">
+                    <div class="form-group"><label class="form-label">소프트웨어명 *</label><input type="text"
+                            class="form-input" name="software_name" required></div>
+                    <div class="form-group"><label class="form-label">카테고리 *</label><select class="form-select"
+                            name="category_id" required id="licenseCategorySelect"></select></div>
+                    <div class="form-group"><label class="form-label">라이선스 유형 *</label>
+                        <select class="form-select" name="license_type">
+                            <option>구독</option>
+                            <option>영구</option>
+                            <option>볼륨</option>
+                            <option>OEM</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">측정단위 *</label>
+                        <select class="form-select" name="license_metric">
+                            <option value="per_user">사용자별</option>
+                            <option value="per_device">기기별</option>
+                            <option value="concurrent">동시접속</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">총수량 *</label><input type="number"
+                            class="form-input" name="total_quantity" required></div>
+                    <div class="form-group"><label class="form-label">관리담당자 *</label><select class="form-select"
+                            name="license_manager_id" required id="licenseManagerSelect"></select></div>
+                    <input type="hidden" name="license_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('licenseModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveLicense()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="locationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>사업장 등록</h3><button class="modal-close" onclick="closeModal('locationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="locationForm">
+                    <div class="form-group"><label class="form-label">사업장 코드 *</label><input type="text"
+                            class="form-input" name="location_code" required></div>
+                    <div class="form-group"><label class="form-label">사업장명 *</label><input type="text"
+                            class="form-input" name="location_name" required></div>
+                    <div class="form-group"><label class="form-label">주소</label><input type="text" class="form-input"
+                            name="address"></div>
+                    <div class="form-group"><label class="form-label">건물</label><input type="text" class="form-input"
+                            name="building"></div>
+                    <input type="hidden" name="location_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('locationModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveLocation()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="userModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>사용자 등록</h3><button class="modal-close" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-group"><label class="form-label">사번 *</label><input type="text" class="form-input"
+                            name="employee_no" required></div>
+                    <div class="form-group"><label class="form-label">이름 *</label><input type="text" class="form-input"
+                            name="user_name" required></div>
+                    <div class="form-group"><label class="form-label">이메일 *</label><input type="email"
+                            class="form-input" name="email" required></div>
+                    <div class="form-group"><label class="form-label">부서 *</label><select class="form-select"
+                            name="dept_id" required id="userDeptSelect"></select></div>
+                    <div class="form-group"><label class="form-label">사업장 *</label><select class="form-select"
+                            name="location_id" required id="userLocationSelect"></select></div>
+                    <input type="hidden" name="user_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('userModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveUser()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Modal -->
+    <div class="modal-overlay" id="deptModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>부서 등록</h3><button class="modal-close" onclick="closeModal('deptModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="deptForm">
+                    <div class="form-group"><label class="form-label">부서 코드 *</label><input type="text"
+                            class="form-input" name="dept_code" required></div>
+                    <div class="form-group"><label class="form-label">부서명 *</label><input type="text" class="form-input"
+                            name="dept_name" required></div>
+                    <div class="form-group"><label class="form-label">레벨 *</label>
+                        <select class="form-select" name="dept_level">
+                            <option value="1">1 (본부)</option>
+                            <option value="2">2 (팀)</option>
+                            <option value="3">3 (파트)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">사업장 *</label><select class="form-select"
+                            name="location_id" required id="deptLocationSelect"></select></div>
+                    <input type="hidden" name="dept_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deptModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveDept()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Modal -->
+    <div class="modal-overlay" id="vendorModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>공급업체 등록</h3><button class="modal-close" onclick="closeModal('vendorModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="vendorForm">
+                    <div class="form-group"><label class="form-label">업체명 *</label><input type="text" class="form-input"
+                            name="vendor_name" required></div>
+                    <div class="form-group"><label class="form-label">구분 *</label>
+                        <select class="form-select" name="vendor_type">
+                            <option>제조사</option>
+                            <option>판매사</option>
+                            <option>유지보수</option>
+                            <option>종합</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">담당자명</label><input type="text" class="form-input"
+                            name="contact_name"></div>
+                    <div class="form-group"><label class="form-label">연락처</label><input type="text" class="form-input"
+                            name="contact_phone"></div>
+                    <div class="form-group"><label class="form-label">이메일</label><input type="email" class="form-input"
+                            name="contact_email"></div>
+                    <input type="hidden" name="vendor_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('vendorModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveVendor()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div class="modal-overlay" id="inventoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>실사 일정 등록</h3><button class="modal-close" onclick="closeModal('inventoryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="inventoryForm">
+                    <div class="form-group"><label class="form-label">실사명 *</label><input type="text" class="form-input"
+                            name="schedule_name" required placeholder="2026년 상반기 자산실사"></div>
+                    <div class="form-group"><label class="form-label">유형 *</label>
+                        <select class="form-select" name="schedule_type">
+                            <option>정기</option>
+                            <option>수시</option>
+                            <option>긴급</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">주기</label>
+                        <select class="form-select" name="frequency">
+                            <option>반기</option>
+                            <option>분기</option>
+                            <option>연간</option>
+                            <option>1회</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">시작일 *</label><input type="date" class="form-input"
+                            name="start_date" required></div>
+                    <div class="form-group"><label class="form-label">마감일 *</label><input type="date" class="form-input"
+                            name="end_date" required></div>
+                    <div class="form-group"><label class="form-label">담당자 *</label><select class="form-select"
+                            name="assigned_manager_id" required id="inventoryManagerSelect"></select></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('inventoryModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveInventory()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>데이터 Import</h3><button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:16px;color:var(--gray-600)">엑셀 파일(.xlsx)을 선택하세요. 먼저 템플릿을 다운로드하여 양식에 맞게 작성해주세요.
+                </p>
+                <input type="file" id="importFile" accept=".xlsx,.xls" class="form-input">
+                <input type="hidden" id="importType">
+                <div id="importResult" style="margin-top:16px"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('importModal')">취소</button>
+                <button class="btn btn-primary" onclick="executeImport()">Import 실행</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Detail Modal -->
+    <div class="modal-overlay" id="assetDetailModal">
+        <div class="modal" style="max-width:800px">
+            <div class="modal-header">
+                <h3 id="assetDetailTitle">자산 상세</h3>
+                <button class="modal-close" onclick="closeModal('assetDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs" id="assetDetailTabs">
+                    <div class="tab active" data-tab="info">기본정보</div>
+                    <div class="tab" data-tab="assignments">배정이력</div>
+                    <div class="tab" data-tab="history">변경이력</div>
+                </div>
+                <div id="assetDetailContent" style="min-height:300px"></div>
+            </div>
+            <div class="modal-footer" id="assetDetailFooter">
+                <button class="btn btn-secondary" onclick="closeModal('assetDetailModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Assign Modal -->
+    <div class="modal-overlay" id="assetAssignModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>자산 배정</h3>
+                <button class="modal-close" onclick="closeModal('assetAssignModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:16px;background:var(--gray-100);padding:12px;border-radius:8px"
+                    id="assignAssetInfo"></p>
+                <form id="assetAssignForm">
+                    <div class="form-group">
+                        <label class="form-label">배정할 사용자 *</label>
+                        <select class="form-select" name="user_id" required id="assignUserSelect"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">배정일</label>
+                        <input type="date" class="form-input" name="assigned_date" value="">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">비고</label>
+                        <input type="text" class="form-input" name="notes" placeholder="배정 사유">
+                    </div>
+                    <input type="hidden" name="asset_id" id="assignAssetId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('assetAssignModal')">취소</button>
+                <button class="btn btn-primary" onclick="executeAssetAssign()">배정</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Status Change Modal -->
+    <div class="modal-overlay" id="assetStatusModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>상태 변경</h3>
+                <button class="modal-close" onclick="closeModal('assetStatusModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:16px;background:var(--gray-100);padding:12px;border-radius:8px"
+                    id="statusAssetInfo"></p>
+                <form id="assetStatusForm">
+                    <div class="form-group">
+                        <label class="form-label">현재 상태</label>
+                        <input type="text" class="form-input" id="currentStatus" readonly
+                            style="background:var(--gray-50)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">변경할 상태 *</label>
+                        <select class="form-select" name="new_status" required id="newStatusSelect">
+                            <option value="사용중">사용중</option>
+                            <option value="여유">여유</option>
+                            <option value="수리중">수리중</option>
+                            <option value="폐기예정">폐기예정</option>
+                            <option value="분실">분실</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">변경 사유 *</label>
+                        <input type="text" class="form-input" name="reason" required placeholder="상태 변경 사유 입력">
+                    </div>
+                    <input type="hidden" name="asset_id" id="statusAssetId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('assetStatusModal')">취소</button>
+                <button class="btn btn-primary" onclick="executeStatusChange()">변경</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Detail Modal -->
+    <div class="modal-overlay" id="licenseDetailModal">
+        <div class="modal" style="max-width:800px">
+            <div class="modal-header">
+                <h3 id="licenseDetailTitle">라이선스 상세</h3>
+                <button class="modal-close" onclick="closeModal('licenseDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="licenseDetailInfo" style="margin-bottom:20px"></div>
+                <div class="chart-title">할당자 목록</div>
+                <div class="table-container" style="box-shadow:none;border:1px solid var(--gray-200)">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>사용자</th>
+                                <th>부서</th>
+                                <th>할당일</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licenseAssignmentsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('licenseDetailModal')">닫기</button>
+                <button class="btn btn-primary" onclick="openLicenseAssignModal()">+ 할당</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Assign Modal -->
+    <div class="modal-overlay" id="licenseAssignModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>라이선스 할당</h3>
+                <button class="modal-close" onclick="closeModal('licenseAssignModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:16px;background:var(--gray-100);padding:12px;border-radius:8px"
+                    id="assignLicenseInfo"></p>
+                <form id="licenseAssignForm">
+                    <div class="form-group" id="licenseUserGroup">
+                        <label class="form-label">할당할 사용자 *</label>
+                        <select class="form-select" name="user_id" id="licenseAssignUserSelect"></select>
+                    </div>
+                    <div class="form-group" id="licenseAssetGroup" style="display:none">
+                        <label class="form-label">할당할 자산 *</label>
+                        <select class="form-select" name="asset_id" id="licenseAssignAssetSelect"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">비고</label>
+                        <input type="text" class="form-input" name="notes" placeholder="할당 메모">
+                    </div>
+                    <input type="hidden" name="license_id" id="assignLicenseId">
+                    <input type="hidden" name="license_metric" id="assignLicenseMetric">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('licenseAssignModal')">취소</button>
+                <button class="btn btn-primary" onclick="executeLicenseAssign()">할당</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EOS Modal -->
+    <div class="modal-overlay" id="eosModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="eosModalTitle">EOS 정보 등록</h3>
+                <button class="modal-close" onclick="closeModal('eosModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="eosForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">제품명 *</label>
+                            <input type="text" class="form-input" name="product_name" required
+                                placeholder="예: Windows 10">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">버전</label>
+                            <input type="text" class="form-input" name="product_version" placeholder="예: 21H2">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">유형 *</label>
+                            <select class="form-select" name="eos_type" required>
+                                <option value="OS">운영체제(OS)</option>
+                                <option value="SW">소프트웨어</option>
+                                <option value="HW">하드웨어</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">제조사</label>
+                            <input type="text" class="form-input" name="manufacturer" placeholder="예: Microsoft">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">EOS 일자 *</label>
+                        <input type="date" class="form-input" name="eos_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">비고</label>
+                        <textarea class="form-input" name="notes" rows="2" placeholder="EOS 관련 참고 사항"></textarea>
+                    </div>
+                    <input type="hidden" name="eos_id" id="eosId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('eosModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveEOS()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="categoryModalTitle">카테고리 등록</h3>
+                <button class="modal-close" onclick="closeModal('categoryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">카테고리 코드 *</label>
+                            <input type="text" class="form-input" name="category_code" required
+                                placeholder="예: HW-NET-SW">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">카테고리명 *</label>
+                            <input type="text" class="form-input" name="category_name" required placeholder="예: 스위치">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">레벨 *</label>
+                            <select class="form-select" name="category_level" required
+                                onchange="updateParentCategoryOptions(this.value)">
+                                <option value="1">1 (대분류)</option>
+                                <option value="2">2 (중분류)</option>
+                                <option value="3" selected>3 (소분류)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">자산유형 *</label>
+                            <select class="form-select" name="asset_type" required>
+                                <option value="HW">HW (하드웨어)</option>
+                                <option value="SW">SW (소프트웨어)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="parentCategoryGroup">
+                        <label class="form-label">상위 카테고리</label>
+                        <select class="form-select" name="parent_category_id" id="parentCategorySelect">
+                            <option value="">없음</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">사용연한 (월)</label>
+                        <input type="number" class="form-input" name="useful_life_months" placeholder="예: 60">
+                    </div>
+                    <input type="hidden" name="category_id" id="categoryId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('categoryModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveCategory()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Helper
+        const api = {
+            get: async (url) => (await fetch(url)).json(),
+            post: async (url, data) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json(),
+            put: async (url, data) => (await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json(),
+            delete: async (url) => (await fetch(url, { method: 'DELETE' })).json()
+        };
+
+        // Global Data
+        let locations = [], departments = [], users = [], categories = [], vendors = [];
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-' + item.dataset.page).classList.add('active');
+                loadPageData(item.dataset.page);
+            });
+        });
+
+        function loadPageData(page) {
+            const loaders = {
+                dashboard: loadDashboard, assets: loadAssets, licenses: loadLicenses,
+                locations: loadLocations, departments: loadDepartments, users: loadUsers,
+                categories: loadCategories, vendors: loadVendors, eos: loadEOS,
+                inventories: loadInventories, notifications: loadNotifications
+            };
+            if (loaders[page]) loaders[page]();
+        }
+
+        // Modal Helpers
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function getFormData(formId) {
+            const form = document.getElementById(formId);
+            const data = {};
+            new FormData(form).forEach((v, k) => { if (v) data[k] = v; });
+            return data;
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            const summary = await api.get('/api/dashboard/summary');
+            if (summary.success) {
+                const d = summary.data;
+                document.getElementById('summary-cards').innerHTML = `
+                    <div class="card"><div class="card-title">총 자산</div><div class="card-value">${d.total}</div></div>
+                    <div class="card"><div class="card-title">사용중</div><div class="card-value success">${d.in_use}</div></div>
+                    <div class="card"><div class="card-title">여유</div><div class="card-value">${d.available}</div></div>
+                    <div class="card"><div class="card-title">수리중</div><div class="card-value warning">${d.repair}</div></div>
+                    <div class="card"><div class="card-title">폐기예정</div><div class="card-value danger">${d.pending_disposal}</div></div>
+                `;
+            }
+
+            const catData = await api.get('/api/dashboard/by-category');
+            if (catData.success && catData.data.length) {
+                new Chart(document.getElementById('categoryChart'), {
+                    type: 'bar', data: {
+                        labels: catData.data.map(c => c.category_name),
+                        datasets: [{
+                            label: '자산 수', data: catData.data.map(c => c.count),
+                            backgroundColor: ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+                        }]
+                    }, options: { responsive: true, plugins: { legend: { display: false } } }
+                });
+            }
+
+            const licStatus = await api.get('/api/dashboard/license-status');
+            if (licStatus.success) {
+                document.getElementById('licenseStatus').innerHTML = licStatus.data.map(l => {
+                    const pct = l.total_quantity ? (l.used_quantity / l.total_quantity * 100) : 0;
+                    const color = l.compliance_status === '초과' ? 'var(--danger)' : pct > 80 ? 'var(--warning)' : 'var(--success)';
+                    return `<div class="license-item">
+                        <span>${l.software_name}</span>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="license-bar"><div class="license-bar-fill" style="width:${Math.min(pct, 100)}%;background:${color}"></div></div>
+                            <span style="color:${color}">${l.used_quantity}/${l.total_quantity}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            const ulExp = await api.get('/api/dashboard/useful-life-expired');
+            document.getElementById('usefulLifeExpired').innerHTML = ulExp.success && ulExp.data.length ?
+                ulExp.data.map(u => `<div class="activity-item">⚠️ ${u.category_name}: ${u.count}대</div>`).join('') : '<p style="color:var(--gray-600)">초과 자산 없음</p>';
+
+            const eosExp = await api.get('/api/dashboard/eos-status');
+            document.getElementById('eosStatus').innerHTML = eosExp.success && eosExp.data.length ?
+                eosExp.data.map(e => `<div class="activity-item">🔴 ${e.product_name}: ${e.count}대</div>`).join('') : '<p style="color:var(--gray-600)">EOS 자산 없음</p>';
+
+            // 사업장별
+            const locData = await api.get('/api/dashboard/by-location');
+            if (locData.success && locData.data.length) {
+                new Chart(document.getElementById('locationChart'), {
+                    type: 'doughnut', data: {
+                        labels: locData.data.map(l => l.location_name),
+                        datasets: [{
+                            data: locData.data.map(l => l.count),
+                            backgroundColor: ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4']
+                        }]
+                    }, options: { responsive: true, plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+            // 부서별
+            const deptData = await api.get('/api/dashboard/by-department');
+            if (deptData.success && deptData.data.length) {
+                new Chart(document.getElementById('departmentChart'), {
+                    type: 'bar', data: {
+                        labels: deptData.data.map(d => d.dept_name),
+                        datasets: [{
+                            label: '보유 자산', data: deptData.data.map(d => d.count),
+                            backgroundColor: '#10B981'
+                        }]
+                    }, options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+                });
+            }
+
+            const activity = await api.get('/api/dashboard/recent-activity');
+            document.getElementById('recentActivity').innerHTML = activity.success ?
+                activity.data.slice(0, 10).map(a => `<div class="activity-item"><div class="activity-time">${a.action_date}</div><div class="activity-text">${a.action_detail || a.action_type}</div></div>`).join('') : '';
+        }
+
+        // Assets
+        async function loadAssets() {
+            const keyword = document.getElementById('assetSearch')?.value || '';
+            const loc = document.getElementById('assetLocationFilter')?.value || '';
+            const status = document.getElementById('assetStatusFilter')?.value || '';
+            let url = '/api/assets?';
+            if (keyword) url += `keyword=${keyword}&`;
+            if (loc) url += `location_id=${loc}&`;
+            if (status) url += `status=${status}&`;
+            const res = await api.get(url);
+            if (res.success) {
+                document.getElementById('assetsTable').innerHTML = res.data.map(a => `<tr>
+                    <td>${a.asset_number}</td><td>${a.asset_name}</td><td>${a.category_name || ''}</td>
+                    <td><span class="badge ${a.asset_status === '사용중' ? 'badge-success' : a.asset_status === '여유' ? 'badge-info' : 'badge-warning'}">${a.asset_status}</span></td>
+                    <td>${a.location_name || ''}</td><td>${a.current_user_name || '-'}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="openAssetDetail(${a.asset_id})">상세</button> <button class="btn btn-sm btn-secondary" onclick="editAsset(${a.asset_id})">수정</button></td>
+                </tr>`).join('');
+            }
+        }
+        async function openAssetModal(data = {}) {
+            await loadMasterData();
+            document.getElementById('assetCategorySelect').innerHTML = categories.filter(c => c.category_level === 3).map(c => `<option value="${c.category_id}">${c.category_name}</option>`).join('');
+            document.getElementById('assetLocationSelect').innerHTML = locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
+            document.getElementById('assetManagerSelect').innerHTML = users.filter(u => u.is_active).map(u => `<option value="${u.user_id}">${u.user_name}</option>`).join('');
+            document.getElementById('assetForm').reset();
+            openModal('assetModal');
+        }
+        async function saveAsset() {
+            const data = getFormData('assetForm');
+            const res = data.asset_id ? await api.put(`/api/assets/${data.asset_id}`, data) : await api.post('/api/assets', data);
+            if (res.success) { closeModal('assetModal'); loadAssets(); alert(res.message); }
+            else alert(res.message);
+        }
+        async function editAsset(id) {
+            const res = await api.get(`/api/assets/${id}`);
+            if (res.success) {
+                await openAssetModal();
+                const form = document.getElementById('assetForm');
+                Object.keys(res.data).forEach(k => { if (form[k]) form[k].value = res.data[k]; });
+            }
+        }
+
+        // Licenses
+        async function loadLicenses() {
+            const res = await api.get('/api/licenses');
+            if (res.success) {
+                document.getElementById('licensesTable').innerHTML = res.data.map(l => `<tr>
+                    <td>${l.license_number}</td><td>${l.software_name}</td><td>${l.license_type}</td>
+                    <td>${l.total_quantity}</td><td>${l.used_quantity}</td><td>${l.available_quantity}</td>
+                    <td><span class="badge ${l.compliance_status === '정상' ? 'badge-success' : 'badge-danger'}">${l.compliance_status}</span></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="openLicenseDetail(${l.license_id})">상세</button></td>
+                </tr>`).join('');
+            }
+        }
+        async function openLicenseModal() {
+            await loadMasterData();
+            document.getElementById('licenseCategorySelect').innerHTML = categories.filter(c => c.asset_type === 'SW').map(c => `<option value="${c.category_id}">${c.category_name}</option>`).join('');
+            document.getElementById('licenseManagerSelect').innerHTML = users.filter(u => u.is_active).map(u => `<option value="${u.user_id}">${u.user_name}</option>`).join('');
+            document.getElementById('licenseForm').reset();
+            openModal('licenseModal');
+        }
+        async function saveLicense() {
+            const data = getFormData('licenseForm');
+            const res = data.license_id ? await api.put(`/api/licenses/${data.license_id}`, data) : await api.post('/api/licenses', data);
+            if (res.success) { closeModal('licenseModal'); loadLicenses(); alert(res.message); }
+            else alert(res.message);
+        }
+        // Asset Detail Functions
+        let currentAssetId = null;
+        async function openAssetDetail(id) {
+            currentAssetId = id;
+            const res = await api.get(`/api/assets/${id}`);
+            if (!res.success) return alert(res.message);
+            const a = res.data;
+            document.getElementById('assetDetailTitle').textContent = `자산 상세: ${a.asset_number}`;
+            // Setup tabs
+            document.querySelectorAll('#assetDetailTabs .tab').forEach(tab => {
+                tab.onclick = () => switchAssetTab(tab.dataset.tab, a);
+            });
+            switchAssetTab('info', a);
+            // Footer buttons based on status
+            let footer = '<button class="btn btn-secondary" onclick="closeModal(\x27assetDetailModal\x27)">닫기</button> ';
+            if (a.asset_status === '여유' || a.asset_status === '신규') {
+                footer += '<button class="btn btn-primary" onclick="openAssetAssignModal()">배정</button> ';
+            }
+            if (a.asset_status === '사용중' && a.current_user_id) {
+                footer += '<button class="btn btn-warning" onclick="executeAssetReturn()">회수</button> ';
+            }
+            footer += '<button class="btn btn-secondary" onclick="openAssetStatusModal()">상태변경</button>';
+            document.getElementById('assetDetailFooter').innerHTML = footer;
+            openModal('assetDetailModal');
+        }
+        function switchAssetTab(tab, asset) {
+            document.querySelectorAll('#assetDetailTabs .tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`#assetDetailTabs .tab[data-tab="${tab}"]`).classList.add('active');
+            const content = document.getElementById('assetDetailContent');
+            if (tab === 'info') {
+                content.innerHTML = `<div class="info-grid">
+                        <div class="info-item"><div class="info-label">자산번호</div><div class="info-value">${asset.asset_number}</div></div>
+                        <div class="info-item"><div class="info-label">자산명</div><div class="info-value">${asset.asset_name}</div></div>
+                        <div class="info-item"><div class="info-label">상태</div><div class="info-value"><span class="badge ${asset.asset_status === '사용중' ? 'badge-success' : 'badge-info'}">${asset.asset_status}</span></div></div>
+                        <div class="info-item"><div class="info-label">사업장</div><div class="info-value">${asset.location_name || '-'}</div></div>
+                        <div class="info-item"><div class="info-label">카테고리</div><div class="info-value">${asset.category_name || '-'}</div></div>
+                        <div class="info-item"><div class="info-label">제조사</div><div class="info-value">${asset.manufacturer || '-'}</div></div>
+                        <div class="info-item"><div class="info-label">모델명</div><div class="info-value">${asset.model_name || '-'}</div></div>
+                        <div class="info-item"><div class="info-label">시리얼번호</div><div class="info-value">${asset.serial_number || '-'}</div></div>
+                        <div class="info-item"><div class="info-label">구매일</div><div class="info-value">${asset.purchase_date || '-'}</div></div>
+                        <div class="info-item"><div class="info-label">현재 사용자</div><div class="info-value">${asset.current_user_name || '-'}</div></div>
+                    </div>`;
+            } else if (tab === 'assignments') {
+                loadAssetAssignments(asset.asset_id);
+            } else if (tab === 'history') {
+                loadAssetHistory(asset.asset_id);
+            }
+        }
+        async function loadAssetAssignments(id) {
+            const res = await api.get(`/api/assets/${id}/assignments`);
+            const content = document.getElementById('assetDetailContent');
+            if (res.success && res.data.length) {
+                content.innerHTML = '<table style="width:100%"><thead><tr><th>사용자</th><th>부서</th><th>배정일</th><th>반납일</th></tr></thead><tbody>' +
+                    res.data.map(a => `<tr><td>${a.user_name}</td><td>${a.dept_name || '-'}</td><td>${a.assigned_date || '-'}</td><td>${a.returned_date || '사용중'}</td></tr>`).join('') + '</tbody></table>';
+            } else {
+                content.innerHTML = '<p style="color:var(--gray-600);padding:20px">배정 이력이 없습니다.</p>';
+            }
+        }
+        async function loadAssetHistory(id) {
+            const res = await api.get(`/api/assets/${id}/history`);
+            const content = document.getElementById('assetDetailContent');
+            if (res.success && res.data.length) {
+                content.innerHTML = '<div class="timeline">' +
+                    res.data.slice(0, 20).map(h => `<div class="timeline-item">
+                            <div class="timeline-date">${h.action_date}</div>
+                            <div class="timeline-action">${h.action_type}</div>
+                            <div class="timeline-detail">${h.action_detail || ''}</div>
+                        </div>`).join('') + '</div>';
+            } else {
+                content.innerHTML = '<p style="color:var(--gray-600);padding:20px">변경 이력이 없습니다.</p>';
+            }
+        }
+        async function openAssetAssignModal() {
+            await loadMasterData();
+            const res = await api.get(`/api/assets/${currentAssetId}`);
+            document.getElementById('assignAssetInfo').innerHTML = `<strong>${res.data.asset_number}</strong> ${res.data.asset_name}`;
+            document.getElementById('assignUserSelect').innerHTML = users.filter(u => u.is_active).map(u => `<option value="${u.user_id}">${u.user_name} (${u.dept_name || ''})</option>`).join('');
+            document.getElementById('assignAssetId').value = currentAssetId;
+            document.getElementById('assetAssignForm').reset();
+            document.querySelector('[name="assigned_date"]').value = new Date().toISOString().split('T')[0];
+            openModal('assetAssignModal');
+        }
+        async function executeAssetAssign() {
+            const data = getFormData('assetAssignForm');
+            const res = await api.post(`/api/assets/${data.asset_id}/assign`, data);
+            if (res.success) {
+                closeModal('assetAssignModal');
+                closeModal('assetDetailModal');
+                loadAssets();
+                alert(res.message);
+            } else alert(res.message);
+        }
+        async function executeAssetReturn() {
+            if (!confirm('이 자산을 회수하시겠습니까?')) return;
+            const res = await api.post(`/api/assets/${currentAssetId}/return`, {});
+            if (res.success) {
+                closeModal('assetDetailModal');
+                loadAssets();
+                alert(res.message);
+            } else alert(res.message);
+        }
+        async function openAssetStatusModal() {
+            const res = await api.get(`/api/assets/${currentAssetId}`);
+            document.getElementById('statusAssetInfo').innerHTML = `<strong>${res.data.asset_number}</strong> ${res.data.asset_name}`;
+            document.getElementById('currentStatus').value = res.data.asset_status;
+            document.getElementById('statusAssetId').value = currentAssetId;
+            document.getElementById('assetStatusForm').reset();
+            document.getElementById('currentStatus').value = res.data.asset_status;
+            openModal('assetStatusModal');
+        }
+        async function executeStatusChange() {
+            const data = getFormData('assetStatusForm');
+            const res = await api.post(`/api/assets/${data.asset_id}/status`, data);
+            if (res.success) {
+                closeModal('assetStatusModal');
+                closeModal('assetDetailModal');
+                loadAssets();
+                alert(res.message);
+            } else alert(res.message);
+        }
+
+        // License Detail Functions
+        let currentLicenseId = null, currentLicenseMetric = null;
+        async function openLicenseDetail(id) {
+            currentLicenseId = id;
+            const res = await api.get(`/api/licenses/${id}`);
+            if (!res.success) return alert(res.message);
+            const l = res.data;
+            currentLicenseMetric = l.license_metric;
+            document.getElementById('licenseDetailTitle').textContent = `라이선스 상세: ${l.software_name}`;
+            document.getElementById('licenseDetailInfo').innerHTML = `<div class="info-grid">
+                    <div class="info-item"><div class="info-label">라이선스 번호</div><div class="info-value">${l.license_number}</div></div>
+                    <div class="info-item"><div class="info-label">소프트웨어</div><div class="info-value">${l.software_name}</div></div>
+                    <div class="info-item"><div class="info-label">유형</div><div class="info-value">${l.license_type}</div></div>
+                    <div class="info-item"><div class="info-label">측정단위</div><div class="info-value">${l.license_metric}</div></div>
+                    <div class="info-item"><div class="info-label">총 수량</div><div class="info-value">${l.total_quantity}</div></div>
+                    <div class="info-item"><div class="info-label">사용중</div><div class="info-value">${l.used_quantity}</div></div>
+                    <div class="info-item"><div class="info-label">가용</div><div class="info-value">${l.available_quantity}</div></div>
+                    <div class="info-item"><div class="info-label">상태</div><div class="info-value"><span class="badge ${l.compliance_status === '정상' ? 'badge-success' : 'badge-danger'}">${l.compliance_status}</span></div></div>
+                </div>`;
+            loadLicenseAssignmentsList(id);
+            openModal('licenseDetailModal');
+        }
+        async function loadLicenseAssignmentsList(id) {
+            const res = await api.get(`/api/licenses/${id}/assignments`);
+            const tbody = document.getElementById('licenseAssignmentsTable');
+            if (res.success && res.data.length) {
+                tbody.innerHTML = res.data.map(a => `<tr>
+                        <td>${a.user_name || a.asset_number || '-'}</td>
+                        <td>${a.dept_name || '-'}</td>
+                        <td>${a.assigned_date || '-'}</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="revokeLicenseAssignment(${a.assignment_id})">회수</button></td>
+                    </tr>`).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">할당된 사용자가 없습니다</td></tr>';
+            }
+        }
+        async function openLicenseAssignModal() {
+            await loadMasterData();
+            const res = await api.get(`/api/licenses/${currentLicenseId}`);
+            document.getElementById('assignLicenseInfo').innerHTML = `<strong>${res.data.license_number}</strong> ${res.data.software_name}`;
+            document.getElementById('assignLicenseId').value = currentLicenseId;
+            document.getElementById('assignLicenseMetric').value = currentLicenseMetric;
+            // Show user or asset select based on metric
+            if (currentLicenseMetric === 'per_device') {
+                document.getElementById('licenseUserGroup').style.display = 'none';
+                document.getElementById('licenseAssetGroup').style.display = 'block';
+                const assets = await api.get('/api/assets?status=사용중');
+                document.getElementById('licenseAssignAssetSelect').innerHTML = assets.data.map(a => `<option value="${a.asset_id}">${a.asset_number} - ${a.asset_name}</option>`).join('');
+            } else {
+                document.getElementById('licenseUserGroup').style.display = 'block';
+                document.getElementById('licenseAssetGroup').style.display = 'none';
+                document.getElementById('licenseAssignUserSelect').innerHTML = users.filter(u => u.is_active).map(u => `<option value="${u.user_id}">${u.user_name}</option>`).join('');
+            }
+            openModal('licenseAssignModal');
+        }
+        async function executeLicenseAssign() {
+            const data = getFormData('licenseAssignForm');
+            const res = await api.post(`/api/licenses/${data.license_id}/assign`, data);
+            if (res.success) {
+                closeModal('licenseAssignModal');
+                loadLicenseAssignmentsList(currentLicenseId);
+                loadLicenses();
+                alert(res.message);
+            } else alert(res.message);
+        }
+        async function revokeLicenseAssignment(assignmentId) {
+            if (!confirm('이 할당을 회수하시겠습니까?')) return;
+            const res = await api.post(`/api/licenses/${currentLicenseId}/revoke`, { assignment_id: assignmentId });
+            if (res.success) {
+                loadLicenseAssignmentsList(currentLicenseId);
+                loadLicenses();
+                alert(res.message);
+            } else alert(res.message);
+        }
+
+        // Locations
+        async function loadLocations() {
+            const res = await api.get('/api/locations');
+            if (res.success) {
+                locations = res.data;
+                document.getElementById('assetLocationFilter').innerHTML = '<option value="">전체 사업장</option>' + locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
+                document.getElementById('locationsTable').innerHTML = res.data.map(l => `<tr>
+                    <td>${l.location_code}</td><td>${l.location_name}</td><td>${l.address || ''}</td><td>${l.building || ''}</td>
+                    <td><button class="btn btn-sm btn-secondary" onclick="editLocation(${l.location_id})">수정</button></td>
+                </tr>`).join('');
+            }
+        }
+        function openLocationModal() { document.getElementById('locationForm').reset(); openModal('locationModal'); }
+        async function saveLocation() {
+            const data = getFormData('locationForm');
+            const res = data.location_id ? await api.put(`/api/locations/${data.location_id}`, data) : await api.post('/api/locations', data);
+            if (res.success) { closeModal('locationModal'); loadLocations(); alert(res.message); }
+            else alert(res.message);
+        }
+        async function editLocation(id) {
+            const res = await api.get(`/api/locations/${id}`);
+            if (res.success) { openLocationModal(); Object.keys(res.data).forEach(k => { const f = document.getElementById('locationForm')[k]; if (f) f.value = res.data[k]; }); }
+        }
+
+        // Departments
+        async function loadDepartments() {
+            const res = await api.get('/api/departments');
+            if (res.success) {
+                departments = res.data;
+                document.getElementById('departmentsTable').innerHTML = res.data.map(d => `<tr>
+                    <td>${d.dept_code}</td><td>${d.dept_name}</td><td>${d.dept_level}</td><td>${d.location_name || ''}</td>
+                    <td><button class="btn btn-sm btn-secondary">수정</button></td>
+                </tr>`).join('');
+            }
+        }
+        async function openDeptModal() {
+            await loadMasterData();
+            document.getElementById('deptLocationSelect').innerHTML = locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
+            document.getElementById('deptForm').reset();
+            openModal('deptModal');
+        }
+        async function saveDept() {
+            const data = getFormData('deptForm');
+            const res = data.dept_id ? await api.put(`/api/departments/${data.dept_id}`, data) : await api.post('/api/departments', data);
+            if (res.success) { closeModal('deptModal'); loadDepartments(); alert(res.message); }
+            else alert(res.message);
+        }
+
+        // Users
+        async function loadUsers() {
+            const res = await api.get('/api/users');
+            if (res.success) {
+                users = res.data;
+                document.getElementById('usersTable').innerHTML = res.data.map(u => `<tr>
+                    <td>${u.employee_no}</td><td>${u.user_name}</td><td>${u.email}</td><td>${u.dept_name || ''}</td><td>${u.location_name || ''}</td>
+                    <td><span class="badge ${u.is_active ? 'badge-success' : 'badge-danger'}">${u.is_active ? '재직' : '퇴직'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="viewUserDetail(${u.user_id})">상세</button>
+                        ${u.is_active ? `<button class="btn btn-sm btn-danger" onclick="bulkReturn(${u.user_id})">일괄회수</button>` : ''}
+                    </td>
+                </tr>`).join('');
+            }
+        }
+        async function openUserModal() {
+            await loadMasterData();
+            document.getElementById('userDeptSelect').innerHTML = departments.map(d => `<option value="${d.dept_id}">${d.dept_name}</option>`).join('');
+            document.getElementById('userLocationSelect').innerHTML = locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
+            document.getElementById('userForm').reset();
+            openModal('userModal');
+        }
+        async function saveUser() {
+            const data = getFormData('userForm');
+            const res = data.user_id ? await api.put(`/api/users/${data.user_id}`, data) : await api.post('/api/users', data);
+            if (res.success) { closeModal('userModal'); loadUsers(); alert(res.message); }
+            else alert(res.message);
+        }
+        async function viewUserDetail(id) {
+            const [assets, licenses] = await Promise.all([api.get(`/api/users/${id}/assets`), api.get(`/api/users/${id}/licenses`)]);
+            alert(`배정 자산: ${assets.data?.length || 0}건\n할당 라이선스: ${licenses.data?.length || 0}건`);
+        }
+        async function bulkReturn(id) {
+            if (confirm('이 사용자의 모든 자산과 라이선스를 회수합니다.')) {
+                const res = await api.post(`/api/users/${id}/bulk-return`, {});
+                alert(res.message);
+                loadUsers();
+            }
+        }
+
+        // Categories
+        async function loadCategories() {
+            const res = await api.get('/api/categories');
+            if (res.success) {
+                categories = res.data;
+                document.getElementById('categoriesTable').innerHTML = res.data.map(c => {
+                    const parent = categories.find(p => p.category_id === c.parent_category_id);
+                    return `<tr>
+                    <td>${c.category_code}</td><td>${'　'.repeat(c.category_level - 1)}${c.category_name}</td>
+                    <td>${c.category_level}</td><td>${c.asset_type}</td><td>${parent ? parent.category_name : '-'}</td><td>${c.useful_life_months || '-'}</td>
+                    <td><button class="btn btn-sm btn-secondary" onclick="editCategory(${c.category_id})">수정</button></td>
+                </tr>`;
+                }).join('');
+            }
+        }
+        function openCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = '카테고리 등록';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            updateParentCategoryOptions(3);
+            openModal('categoryModal');
+        }
+        function updateParentCategoryOptions(level) {
+            const parentLevel = parseInt(level) - 1;
+            const sel = document.getElementById('parentCategorySelect');
+            if (parentLevel < 1) {
+                document.getElementById('parentCategoryGroup').style.display = 'none';
+                sel.innerHTML = '<option value="">없음</option>';
+            } else {
+                document.getElementById('parentCategoryGroup').style.display = 'block';
+                const opts = categories.filter(c => c.category_level === parentLevel);
+                sel.innerHTML = '<option value="">선택</option>' + opts.map(c => `<option value="${c.category_id}">${c.category_name}</option>`).join('');
+            }
+        }
+        async function editCategory(id) {
+            const res = await api.get(`/api/categories/${id}`);
+            if (!res.success) return alert(res.message);
+            const c = res.data;
+            document.getElementById('categoryModalTitle').textContent = '카테고리 수정';
+            document.getElementById('categoryId').value = c.category_id;
+            const form = document.getElementById('categoryForm');
+            form.category_code.value = c.category_code;
+            form.category_name.value = c.category_name;
+            form.category_level.value = c.category_level;
+            form.asset_type.value = c.asset_type;
+            form.useful_life_months.value = c.useful_life_months || '';
+            updateParentCategoryOptions(c.category_level);
+            form.parent_category_id.value = c.parent_category_id || '';
+            openModal('categoryModal');
+        }
+        async function saveCategory() {
+            const form = document.getElementById('categoryForm');
+            const data = {
+                category_code: form.category_code.value,
+                category_name: form.category_name.value,
+                category_level: parseInt(form.category_level.value),
+                asset_type: form.asset_type.value,
+                parent_category_id: form.parent_category_id.value ? parseInt(form.parent_category_id.value) : null,
+                useful_life_months: form.useful_life_months.value ? parseInt(form.useful_life_months.value) : null
+            };
+            const id = document.getElementById('categoryId').value;
+            const res = id ? await api.put(`/api/categories/${id}`, data) : await api.post('/api/categories', data);
+            if (res.success) { closeModal('categoryModal'); loadCategories(); alert(res.message); }
+            else alert(res.message);
+        }
+
+        // Vendors
+        async function loadVendors() {
+            const res = await api.get('/api/vendors');
+            if (res.success) {
+                vendors = res.data;
+                document.getElementById('vendorsTable').innerHTML = res.data.map(v => `<tr>
+                    <td>${v.vendor_name}</td><td>${v.vendor_type}</td><td>${v.contact_name || ''}</td>
+                    <td>${v.contact_phone || ''}</td><td>${v.contact_email || ''}</td>
+                    <td><button class="btn btn-sm btn-secondary">수정</button></td>
+                </tr>`).join('');
+            }
+        }
+        function openVendorModal() {
+            document.getElementById('vendorForm').reset();
+            openModal('vendorModal');
+        }
+        async function saveVendor() {
+            const data = getFormData('vendorForm');
+            const res = data.vendor_id ? await api.put(`/api/vendors/${data.vendor_id}`, data) : await api.post('/api/vendors', data);
+            if (res.success) { closeModal('vendorModal'); loadVendors(); alert(res.message); }
+            else alert(res.message);
+        }
+
+        // EOS
+        async function loadEOS() {
+            const res = await api.get('/api/eos-info');
+            if (res.success) {
+                document.getElementById('eosTable').innerHTML = res.data.map(e => `<tr>
+                    <td>${e.product_name}</td><td>${e.product_version || ''}</td><td>${e.product_type}</td><td>${e.vendor || ''}</td>
+                    <td><span class="badge ${new Date(e.eos_date) < new Date() ? 'badge-danger' : 'badge-info'}">${e.eos_date}</span></td>
+                    <td>${e.notes || ''}</td>
+                    <td><button class="btn btn-sm btn-secondary" onclick="editEOS(${e.eos_id})">수정</button></td>
+                </tr>`).join('');
+            }
+        }
+        function openEOSModal() {
+            document.getElementById('eosModalTitle').textContent = 'EOS 정보 등록';
+            document.getElementById('eosForm').reset();
+            document.getElementById('eosId').value = '';
+            openModal('eosModal');
+        }
+        async function editEOS(id) {
+            const res = await api.get(`/api/eos-info/${id}`);
+            if (!res.success) return alert(res.message);
+            const e = res.data;
+            document.getElementById('eosModalTitle').textContent = 'EOS 정보 수정';
+            document.getElementById('eosId').value = e.eos_id;
+            const form = document.getElementById('eosForm');
+            form.product_name.value = e.product_name;
+            form.product_version.value = e.product_version || '';
+            form.eos_type.value = e.product_type;
+            form.manufacturer.value = e.vendor || '';
+            form.eos_date.value = e.eos_date;
+            form.notes.value = e.notes || '';
+            openModal('eosModal');
+        }
+        async function saveEOS() {
+            const form = document.getElementById('eosForm');
+            const data = {
+                product_name: form.product_name.value,
+                product_version: form.product_version.value,
+                product_type: form.eos_type.value,
+                vendor: form.manufacturer.value,
+                eos_date: form.eos_date.value,
+                notes: form.notes.value
+            };
+            const id = document.getElementById('eosId').value;
+            const res = id ? await api.put(`/api/eos-info/${id}`, data) : await api.post('/api/eos-info', data);
+            if (res.success) { closeModal('eosModal'); loadEOS(); alert(res.message); }
+            else alert(res.message);
+        }
+
+        // Inventories
+        async function loadInventories() {
+            const res = await api.get('/api/inventories');
+            if (res.success) {
+                document.getElementById('inventoriesTable').innerHTML = res.data.map(i => `<tr>
+                    <td>${i.schedule_name}</td><td>${i.schedule_type}</td><td>${i.start_date} ~ ${i.end_date}</td>
+                    <td>${i.manager_name || ''}</td>
+                    <td><span class="badge ${i.status === '완료' ? 'badge-success' : i.status === '진행중' ? 'badge-warning' : 'badge-info'}">${i.status}</span></td>
+                </tr>`).join('');
+            }
+        }
+        async function openInventoryModal() {
+            await loadMasterData();
+            document.getElementById('inventoryManagerSelect').innerHTML = users.filter(u => u.is_active).map(u => `<option value="${u.user_id}">${u.user_name}</option>`).join('');
+            document.getElementById('inventoryForm').reset();
+            openModal('inventoryModal');
+        }
+        async function saveInventory() {
+            const data = getFormData('inventoryForm');
+            data.status = '예정';
+            const res = await api.post('/api/inventories', data);
+            if (res.success) { closeModal('inventoryModal'); loadInventories(); alert(res.message); }
+            else alert(res.message);
+        }
+
+        // Import/Export Functions
+        function downloadTemplate(type) {
+            const url = type === 'license' ? '/api/licenses/import-template' : `/api/assets/import-template/${type}`;
+            window.location.href = url;
+        }
+        function openImportModal(type) {
+            document.getElementById('importType').value = type;
+            document.getElementById('importFile').value = '';
+            document.getElementById('importResult').innerHTML = '';
+            openModal('importModal');
+        }
+        async function executeImport() {
+            const type = document.getElementById('importType').value;
+            const file = document.getElementById('importFile').files[0];
+            if (!file) { alert('파일을 선택해주세요.'); return; }
+            const formData = new FormData();
+            formData.append('file', file);
+            const url = type === 'license' ? '/api/licenses/import' : '/api/assets/import';
+            const res = await fetch(url, { method: 'POST', body: formData }).then(r => r.json());
+            if (res.success) {
+                let html = `<div class="badge badge-success">✅ 성공: ${res.data.success}건</div>`;
+                if (res.data.errors?.length) {
+                    html += `<div class="badge badge-danger" style="margin-left:8px">❌ 실패: ${res.data.errors.length}건</div>`;
+                    html += '<ul style="margin-top:12px;font-size:0.875rem">';
+                    res.data.errors.slice(0, 5).forEach(e => {
+                        html += `<li>행 ${e.row}: ${e.errors.join(', ')}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                document.getElementById('importResult').innerHTML = html;
+                if (type === 'asset') loadAssets();
+                else loadLicenses();
+            } else {
+                document.getElementById('importResult').innerHTML = `<div class="badge badge-danger">❌ 오류: ${res.message}</div>`;
+            }
+        }
+        function exportAssets() { window.location.href = '/api/assets/export'; }
+        function exportLicenses() { window.location.href = '/api/licenses/export'; }
+
+        // Notifications
+        async function loadNotifications() {
+            const res = await api.get('/api/notifications');
+            document.getElementById('notificationsList').innerHTML = res.success && res.data.length ?
+                res.data.map(n => `<div class="activity-item" style="opacity:${n.is_read ? 0.6 : 1}">
+                    <div style="display:flex;justify-content:space-between">
+                        <strong>${n.title}</strong>
+                        <span class="badge ${n.severity === 'critical' ? 'badge-danger' : n.severity === 'warning' ? 'badge-warning' : 'badge-info'}">${n.severity}</span>
+                    </div>
+                    <div class="activity-text">${n.message}</div>
+                    <div class="activity-time">${n.created_at}</div>
+                </div>`).join('') : '<p style="color:var(--gray-600)">알림이 없습니다.</p>';
+        }
+        async function readAllNotifications() {
+            await api.post('/api/notifications/read-all', {});
+            loadNotifications();
+        }
+
+        // Load Master Data
+        async function loadMasterData() {
+            const [loc, dept, usr, cat] = await Promise.all([
+                api.get('/api/locations'), api.get('/api/departments'), api.get('/api/users'), api.get('/api/categories')
+            ]);
+            if (loc.success) locations = loc.data;
+            if (dept.success) departments = dept.data;
+            if (usr.success) users = usr.data;
+            if (cat.success) categories = cat.data;
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMasterData().then(() => {
+                loadDashboard();
+                loadLocations();
+            });
+        });
+    </script>
+</body>
+
+</html>

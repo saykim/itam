@@ -1,0 +1,9 @@
+.agent/
+PRD.md
+AI_WORKFLOW.md
+deployment.md
+itam.db
+venv/
+__pycache__/
+*.pyc
+.DS_Store
