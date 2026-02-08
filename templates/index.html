@@ -1767,7 +1767,7 @@
         }
         async function executeStatusChange() {
             const data = getFormData('assetStatusForm');
-            const res = await api.post(`/api/assets/${data.asset_id}/status`, data);
+            const res = await api.post(`/api/assets/${data.asset_id}/change-status`, data);
             if (res.success) {
                 closeModal('assetStatusModal');
                 closeModal('assetDetailModal');
