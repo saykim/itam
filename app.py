@@ -10,7 +10,7 @@ from datetime import datetime, date
 import os
 
 app = Flask(__name__)
-DB_PATH = 'itam.db'
+DB_PATH = 'itam_prod.db'
 
 # ========================================
 # Database Helpers

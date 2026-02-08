@@ -5,7 +5,7 @@ Phase1-01: DB Schema + Phase1-02: Initial Data
 import sqlite3
 from datetime import datetime, date
 
-DB_PATH = 'itam.db'
+DB_PATH = 'itam_prod.db'
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
