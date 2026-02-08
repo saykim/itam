@@ -293,13 +293,32 @@ def create_tables():
     )
     ''')
     
-    # 7.2.7 라이선스 할당 (LicenseAssignment)
+    # 7.2.7 라이선스 키 인벤토리 (LicenseKey)
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS LicenseKey (
+        license_key_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        license_id INTEGER NOT NULL,
+        key_value VARCHAR(500) NOT NULL,
+        key_status VARCHAR(20) NOT NULL DEFAULT '가용',
+        assigned_assignment_id INTEGER,
+        assigned_date DATE,
+        revoked_date DATE,
+        notes TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(license_id, key_value),
+        FOREIGN KEY (license_id) REFERENCES SoftwareLicense(license_id),
+        FOREIGN KEY (assigned_assignment_id) REFERENCES LicenseAssignment(assignment_id)
+    )
+    ''')
+    
+    # 7.2.8 라이선스 할당 (LicenseAssignment)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS LicenseAssignment (
         assignment_id INTEGER PRIMARY KEY AUTOINCREMENT,
         license_id INTEGER NOT NULL,
         user_id INTEGER,
         asset_id INTEGER,
+        license_key_id INTEGER,
         assigned_date DATE NOT NULL,
         revoked_date DATE,
         is_active BOOLEAN NOT NULL DEFAULT 1,
@@ -309,11 +328,12 @@ def create_tables():
         FOREIGN KEY (license_id) REFERENCES SoftwareLicense(license_id),
         FOREIGN KEY (user_id) REFERENCES User(user_id),
         FOREIGN KEY (asset_id) REFERENCES Asset(asset_id),
+        FOREIGN KEY (license_key_id) REFERENCES LicenseKey(license_key_id),
         FOREIGN KEY (assigned_by) REFERENCES User(user_id)
     )
     ''')
     
-    # 7.2.8 자산 이력 (AssetHistory) - INSERT ONLY
+    # 7.2.9 자산 이력 (AssetHistory) - INSERT ONLY
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS AssetHistory (
         history_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -330,7 +350,7 @@ def create_tables():
     )
     ''')
     
-    # 7.2.9 실사 일정 (InventorySchedule)
+    # 7.2.10 실사 일정 (InventorySchedule)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS InventorySchedule (
         schedule_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -355,7 +375,7 @@ def create_tables():
     )
     ''')
     
-    # 7.2.10 실사 상세 (InventoryDetail)
+    # 7.2.11 실사 상세 (InventoryDetail)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS InventoryDetail (
         detail_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -375,7 +395,7 @@ def create_tables():
     )
     ''')
     
-    # 7.2.11 알림 (Notification)
+    # 7.2.12 알림 (Notification)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Notification (
         notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -394,7 +414,7 @@ def create_tables():
     )
     ''')
     
-    # 7.2.12 시스템 설정 (SystemConfig)
+    # 7.2.13 시스템 설정 (SystemConfig)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS SystemConfig (
         config_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -418,6 +438,8 @@ def create_tables():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_asset_deleted ON Asset(is_deleted)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_license_compliance ON SoftwareLicense(compliance_status)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_license_subscription_end ON SoftwareLicense(subscription_end)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_license_key_license ON LicenseKey(license_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_license_key_status ON LicenseKey(key_status)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_notification_user ON Notification(target_user_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_notification_read ON Notification(is_read)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_history_ref ON AssetHistory(reference_type, reference_id)')

@@ -12,6 +12,165 @@ import os
 app = Flask(__name__)
 DB_PATH = 'itam_prod.db'
 
+def normalize_license_keys(raw_text):
+    """Parse bulk key text into unique key list preserving order."""
+    if raw_text is None:
+        return []
+    text = str(raw_text).replace('\r', '')
+    candidates = []
+    for line in text.split('\n'):
+        for token in line.replace(';', ',').split(','):
+            key = token.strip()
+            if key:
+                candidates.append(key)
+    deduped = []
+    seen = set()
+    for key in candidates:
+        if key not in seen:
+            deduped.append(key)
+            seen.add(key)
+    return deduped
+
+def check_db_schema():
+    """Check and update DB schema without external script"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute("PRAGMA foreign_keys = ON")
+        cursor = conn.cursor()
+        table_exists = cursor.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='SoftwareLicense'"
+        ).fetchone()
+        if not table_exists:
+            conn.close()
+            return
+        
+        # Check SoftwareLicense.license_status
+        cursor.execute("PRAGMA table_info(SoftwareLicense)")
+        columns = [info[1] for info in cursor.fetchall()]
+        if 'license_status' not in columns:
+            print("🔄 Migrating: Adding license_status to SoftwareLicense")
+            cursor.execute("ALTER TABLE SoftwareLicense ADD COLUMN license_status VARCHAR(20) NOT NULL DEFAULT '활성'")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_license_status ON SoftwareLicense(license_status)")
+        
+        # Key inventory table for per-key lifecycle management.
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS LicenseKey (
+                license_key_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                license_id INTEGER NOT NULL,
+                key_value VARCHAR(500) NOT NULL,
+                key_status VARCHAR(20) NOT NULL DEFAULT '가용',
+                assigned_assignment_id INTEGER,
+                assigned_date DATE,
+                revoked_date DATE,
+                notes TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(license_id, key_value),
+                FOREIGN KEY (license_id) REFERENCES SoftwareLicense(license_id),
+                FOREIGN KEY (assigned_assignment_id) REFERENCES LicenseAssignment(assignment_id)
+            )
+        ''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_licensekey_license ON LicenseKey(license_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_licensekey_status ON LicenseKey(key_status)")
+
+        # Link assignment row to allocated key.
+        la_exists = cursor.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='LicenseAssignment'"
+        ).fetchone()
+        if la_exists:
+            cursor.execute("PRAGMA table_info(LicenseAssignment)")
+            la_columns = [info[1] for info in cursor.fetchall()]
+            if 'license_key_id' not in la_columns:
+                print("🔄 Migrating: Adding license_key_id to LicenseAssignment")
+                cursor.execute("ALTER TABLE LicenseAssignment ADD COLUMN license_key_id INTEGER")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_assignment_licensekey ON LicenseAssignment(license_key_id)")
+
+        # Backfill keys from legacy SoftwareLicense.license_key field.
+        legacy_rows = cursor.execute('''
+            SELECT license_id, license_key
+            FROM SoftwareLicense
+            WHERE COALESCE(TRIM(license_key), '') != ''
+        ''').fetchall()
+        for license_id, legacy_text in legacy_rows:
+            for key in normalize_license_keys(legacy_text):
+                cursor.execute('''
+                    INSERT OR IGNORE INTO LicenseKey (license_id, key_value, key_status)
+                    VALUES (?, ?, '가용')
+                ''', (license_id, key))
+
+        # Map active assignments to available keys when assignment link is empty.
+        license_ids = [row[0] for row in cursor.execute(
+            "SELECT license_id FROM SoftwareLicense WHERE is_deleted = 0"
+        ).fetchall()]
+        for license_id in license_ids:
+            assignment_ids = [row[0] for row in cursor.execute('''
+                SELECT assignment_id
+                FROM LicenseAssignment
+                WHERE license_id = ? AND is_active = 1 AND license_key_id IS NULL
+                ORDER BY assignment_id
+            ''', (license_id,)).fetchall()]
+            key_ids = [row[0] for row in cursor.execute('''
+                SELECT license_key_id
+                FROM LicenseKey
+                WHERE license_id = ? AND key_status = '가용'
+                ORDER BY license_key_id
+            ''', (license_id,)).fetchall()]
+            for assignment_id, license_key_id in zip(assignment_ids, key_ids):
+                cursor.execute('''
+                    UPDATE LicenseAssignment
+                    SET license_key_id = ?
+                    WHERE assignment_id = ?
+                ''', (license_key_id, assignment_id))
+                cursor.execute('''
+                    UPDATE LicenseKey
+                    SET key_status = '할당',
+                        assigned_assignment_id = ?,
+                        assigned_date = COALESCE(assigned_date, DATE('now'))
+                    WHERE license_key_id = ?
+                ''', (assignment_id, license_key_id))
+
+            # Keep quantity fields consistent during startup migration.
+            key_total = cursor.execute('''
+                SELECT COUNT(*)
+                FROM LicenseKey
+                WHERE license_id = ? AND key_status != '폐기'
+            ''', (license_id,)).fetchone()[0]
+            assigned_key_count = cursor.execute('''
+                SELECT COUNT(*)
+                FROM LicenseKey
+                WHERE license_id = ? AND key_status = '할당'
+            ''', (license_id,)).fetchone()[0]
+            active_assign_count = cursor.execute('''
+                SELECT COUNT(*)
+                FROM LicenseAssignment
+                WHERE license_id = ? AND is_active = 1
+            ''', (license_id,)).fetchone()[0]
+            current_total = cursor.execute('''
+                SELECT total_quantity
+                FROM SoftwareLicense
+                WHERE license_id = ?
+            ''', (license_id,)).fetchone()[0]
+            if key_total > 0:
+                total = key_total
+                used = max(assigned_key_count, active_assign_count)
+            else:
+                total = current_total
+                used = active_assign_count
+            available = total - used
+            compliance = '정상' if available >= 0 else '초과'
+            cursor.execute('''
+                UPDATE SoftwareLicense
+                SET total_quantity = ?, used_quantity = ?, available_quantity = ?, compliance_status = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE license_id = ?
+            ''', (total, used, available, compliance, license_id))
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"⚠️ Schema check failed: {e}")
+
+check_db_schema()
+
 # ========================================
 # Database Helpers
 # ========================================
@@ -40,6 +199,93 @@ def log_history(conn, ref_type, ref_id, action_type, detail, prev_vals=None, new
     ''', (ref_type, ref_id, action_type, detail, 
           json.dumps(prev_vals, ensure_ascii=False) if prev_vals else None,
           json.dumps(new_vals, ensure_ascii=False) if new_vals else None, action_by))
+
+def sync_license_quantities(conn, license_id):
+    """Synchronize quantity fields with assignment/key state."""
+    row = conn.execute(
+        'SELECT total_quantity FROM SoftwareLicense WHERE license_id = ?',
+        (license_id,)
+    ).fetchone()
+    if not row:
+        return
+
+    key_total = conn.execute('''
+        SELECT COUNT(*) AS cnt
+        FROM LicenseKey
+        WHERE license_id = ? AND key_status != '폐기'
+    ''', (license_id,)).fetchone()['cnt']
+    assigned_key_count = conn.execute('''
+        SELECT COUNT(*) AS cnt
+        FROM LicenseKey
+        WHERE license_id = ? AND key_status = '할당'
+    ''', (license_id,)).fetchone()['cnt']
+    active_assignment_count = conn.execute('''
+        SELECT COUNT(*) AS cnt
+        FROM LicenseAssignment
+        WHERE license_id = ? AND is_active = 1
+    ''', (license_id,)).fetchone()['cnt']
+
+    if key_total > 0:
+        total = key_total
+        used = max(assigned_key_count, active_assignment_count)
+    else:
+        total = row['total_quantity'] or 0
+        used = active_assignment_count
+
+    available = total - used
+    compliance = '정상' if available >= 0 else '초과'
+    conn.execute('''
+        UPDATE SoftwareLicense
+        SET total_quantity = ?, used_quantity = ?, available_quantity = ?,
+            compliance_status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE license_id = ?
+    ''', (total, used, available, compliance, license_id))
+
+def upsert_license_keys(conn, license_id, key_text):
+    """Upsert keys from bulk text; assigned keys are preserved."""
+    desired_keys = set(normalize_license_keys(key_text))
+    today = date.today().isoformat()
+    rows = conn.execute('''
+        SELECT license_key_id, key_value, key_status
+        FROM LicenseKey
+        WHERE license_id = ?
+    ''', (license_id,)).fetchall()
+
+    existing_by_key = {row['key_value']: row for row in rows}
+    assigned_kept = []
+
+    # Add/reactivate desired keys.
+    for key in desired_keys:
+        existing = existing_by_key.get(key)
+        if not existing:
+            conn.execute('''
+                INSERT INTO LicenseKey (license_id, key_value, key_status)
+                VALUES (?, ?, '가용')
+            ''', (license_id, key))
+            continue
+        if existing['key_status'] == '폐기':
+            conn.execute('''
+                UPDATE LicenseKey
+                SET key_status = '가용', revoked_date = NULL, notes = NULL
+                WHERE license_key_id = ?
+            ''', (existing['license_key_id'],))
+
+    # Deprecate keys removed from the new bulk list.
+    for row in rows:
+        key_value = row['key_value']
+        if key_value in desired_keys:
+            continue
+        if row['key_status'] == '할당':
+            assigned_kept.append(key_value)
+            continue
+        if row['key_status'] != '폐기':
+            conn.execute('''
+                UPDATE LicenseKey
+                SET key_status = '폐기', revoked_date = ?, notes = '라이선스 수정으로 비활성화'
+                WHERE license_key_id = ?
+            ''', (today, row['license_key_id']))
+
+    return assigned_kept
 
 # ========================================
 # Location API (사업장)
@@ -285,16 +531,14 @@ def bulk_return_user(id):
     ''', (today, id))
     license_count = cursor.rowcount
     
-    # 라이선스 수량 업데이트
-    cursor.execute('''
-        UPDATE SoftwareLicense SET 
-            used_quantity = (SELECT COUNT(*) FROM LicenseAssignment WHERE license_id = SoftwareLicense.license_id AND is_active = 1),
-            available_quantity = total_quantity - (SELECT COUNT(*) FROM LicenseAssignment WHERE license_id = SoftwareLicense.license_id AND is_active = 1),
-            compliance_status = CASE 
-                WHEN total_quantity >= (SELECT COUNT(*) FROM LicenseAssignment WHERE license_id = SoftwareLicense.license_id AND is_active = 1) THEN '정상'
-                ELSE '초과' END,
-            updated_at = CURRENT_TIMESTAMP
-    ''')
+    # 키/할당 기준으로 라이선스 수량 동기화
+    changed_license_rows = conn.execute('''
+        SELECT DISTINCT license_id
+        FROM LicenseAssignment
+        WHERE user_id = ? AND revoked_date = ?
+    ''', (id, today)).fetchall()
+    for row in changed_license_rows:
+        sync_license_quantities(conn, row['license_id'])
     
     # 사용자 비활성화
     cursor.execute('UPDATE User SET is_active = 0, resign_date = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', (today, id))
@@ -378,6 +622,15 @@ def get_vendors():
     conn.close()
     return api_response(data=rows_to_list(rows))
 
+@app.route('/api/vendors/<int:id>', methods=['GET'])
+def get_vendor(id):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM Vendor WHERE vendor_id = ?', (id,)).fetchone()
+    conn.close()
+    if row:
+        return api_response(data=row_to_dict(row))
+    return api_response(False, message="공급업체를 찾을 수 없습니다", status=404)
+
 @app.route('/api/vendors', methods=['POST'])
 def create_vendor():
     data = request.json
@@ -436,6 +689,15 @@ def create_eos_info():
     conn.commit()
     conn.close()
     return api_response(data={"eos_id": cursor.lastrowid}, message="EOS 정보 등록 완료", status=201)
+
+@app.route('/api/eos-info/<int:id>', methods=['GET'])
+def get_eos_info_by_id(id):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM EOSInfo WHERE eos_id = ?', (id,)).fetchone()
+    conn.close()
+    if row:
+        return api_response(data=row_to_dict(row))
+    return api_response(False, message="EOS 정보를 찾을 수 없습니다", status=404)
 
 @app.route('/api/eos-info/<int:id>', methods=['PUT'])
 def update_eos_info(id):
@@ -633,6 +895,56 @@ def change_asset_status(id):
     conn.close()
     return api_response(message="상태 변경 완료")
 
+@app.route('/api/assets/<int:id>/dispose', methods=['POST'])
+def dispose_asset(id):
+    """자산 폐기 처리 - 폐기예정 → 폐기완료"""
+    data = request.json
+    conn = get_db()
+    today = date.today().isoformat()
+    
+    # 현재 상태 확인
+    old = conn.execute('SELECT asset_status, asset_number FROM Asset WHERE asset_id = ?', (id,)).fetchone()
+    if not old:
+        conn.close()
+        return api_response(False, message="자산을 찾을 수 없습니다", status=404)
+    
+    # 폐기 정보 기록
+    disposal_reason = data.get('disposal_reason', '')
+    disposal_method = data.get('disposal_method', '')
+    disposal_date = data.get('disposal_date', today)
+    disposal_note = f"[폐기처리] 사유: {disposal_reason}, 방법: {disposal_method}, 폐기일: {disposal_date}"
+    
+    conn.execute('''
+        UPDATE Asset SET asset_status = '폐기완료', 
+                        notes = COALESCE(notes, "") || ? || "\n",
+                        disposal_date = ?,
+                        updated_at = CURRENT_TIMESTAMP 
+        WHERE asset_id = ?
+    ''', (disposal_note, disposal_date, id))
+    
+    log_history(conn, 'ASSET', id, 'DISPOSED', 
+                f"자산 폐기: {old['asset_number']} - {disposal_reason}", 
+                {'status': old['asset_status']}, 
+                {'status': '폐기완료', 'reason': disposal_reason, 'method': disposal_method}, 1)
+    conn.commit()
+    conn.close()
+    return api_response(message="폐기 처리 완료")
+
+@app.route('/api/assets/<int:id>/assignments', methods=['GET'])
+def get_asset_assignments(id):
+    """자산 배정 이력 조회"""
+    conn = get_db()
+    rows = conn.execute('''
+        SELECT aa.*, u.user_name, u.employee_no, d.dept_name
+        FROM AssetAssignment aa
+        LEFT JOIN User u ON aa.user_id = u.user_id
+        LEFT JOIN Department d ON u.dept_id = d.dept_id
+        WHERE aa.asset_id = ?
+        ORDER BY aa.assigned_date DESC
+    ''', (id,)).fetchall()
+    conn.close()
+    return api_response(data=rows_to_list(rows))
+
 @app.route('/api/assets/<int:id>/history', methods=['GET'])
 def get_asset_history(id):
     conn = get_db()
@@ -692,7 +1004,9 @@ def generate_license_number(conn):
 def get_licenses():
     conn = get_db()
     rows = conn.execute('''
-        SELECT sl.*, c.category_name, v.vendor_name, u.user_name as manager_name
+        SELECT sl.*, c.category_name, v.vendor_name, u.user_name as manager_name,
+               (SELECT COUNT(*) FROM LicenseKey lk WHERE lk.license_id = sl.license_id AND lk.key_status != '폐기') AS key_total_count,
+               (SELECT COUNT(*) FROM LicenseKey lk WHERE lk.license_id = sl.license_id AND lk.key_status = '가용') AS key_available_count
         FROM SoftwareLicense sl
         LEFT JOIN AssetCategory c ON sl.category_id = c.category_id
         LEFT JOIN Vendor v ON sl.vendor_id = v.vendor_id
@@ -710,21 +1024,33 @@ def create_license():
     try:
         cursor = conn.cursor()
         license_number = data.get('license_number') or generate_license_number(conn)
-        total = data['total_quantity']
+        legacy_key_text = data.get('license_key') or ''
+        keys = normalize_license_keys(legacy_key_text)
+        total = len(keys) if keys else int(data.get('total_quantity') or 0)
+        if total <= 0:
+            return api_response(False, message="총수량 또는 시리얼키를 입력해주세요.", status=400)
         cursor.execute('''
             INSERT INTO SoftwareLicense (license_number, software_name, category_id, vendor_id, version, license_type,
                                          license_metric, license_key, total_quantity, used_quantity, available_quantity,
                                          purchase_date, purchase_cost, subscription_start, subscription_end, is_subscription,
                                          auto_renewal, renewal_cost, parent_license_id, license_manager_id, compliance_status,
-                                         alert_days_before, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                         alert_days_before, notes, license_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '활성')
         ''', (license_number, data['software_name'], data['category_id'], data.get('vendor_id'), data.get('version'),
-              data['license_type'], data['license_metric'], data.get('license_key'), total, total,
+              data['license_type'], data['license_metric'], legacy_key_text, total, total,
               data.get('purchase_date'), data.get('purchase_cost'), data.get('subscription_start'), data.get('subscription_end'),
               1 if data.get('subscription_end') else 0, data.get('auto_renewal'), data.get('renewal_cost'),
               data.get('parent_license_id'), data['license_manager_id'], '정상', data.get('alert_days_before', 30), data.get('notes')))
         license_id = cursor.lastrowid
-        log_history(conn, 'LICENSE', license_id, 'CREATED', f'라이선스 등록: {license_number}', None, data, 1)
+        if keys:
+            cursor.executemany('''
+                INSERT OR IGNORE INTO LicenseKey (license_id, key_value, key_status)
+                VALUES (?, ?, '가용')
+            ''', [(license_id, key) for key in keys])
+        sync_license_quantities(conn, license_id)
+        log_history(conn, 'LICENSE', license_id, 'CREATED',
+                    f'라이선스 등록: {license_number} (키 {len(keys)}개)',
+                    None, data, 1)
         conn.commit()
         return api_response(data={"license_id": license_id, "license_number": license_number}, message="라이선스 등록 완료", status=201)
     except Exception as e:
@@ -736,7 +1062,18 @@ def create_license():
 def get_license(id):
     conn = get_db()
     row = conn.execute('''
-        SELECT sl.*, c.category_name, v.vendor_name, u.user_name as manager_name
+        SELECT sl.*, c.category_name, v.vendor_name, u.user_name as manager_name,
+               (SELECT COUNT(*) FROM LicenseKey lk WHERE lk.license_id = sl.license_id AND lk.key_status != '폐기') AS key_total_count,
+               (SELECT COUNT(*) FROM LicenseKey lk WHERE lk.license_id = sl.license_id AND lk.key_status = '가용') AS key_available_count,
+               (SELECT COUNT(*) FROM LicenseKey lk WHERE lk.license_id = sl.license_id AND lk.key_status = '할당') AS key_assigned_count,
+               (SELECT group_concat(s.key_value, '\n')
+                FROM (
+                    SELECT key_value
+                    FROM LicenseKey
+                    WHERE license_id = sl.license_id AND key_status != '폐기'
+                    ORDER BY license_key_id
+                ) s
+               ) AS license_key_list
         FROM SoftwareLicense sl
         LEFT JOIN AssetCategory c ON sl.category_id = c.category_id
         LEFT JOIN Vendor v ON sl.vendor_id = v.vendor_id
@@ -750,23 +1087,70 @@ def get_license(id):
 def update_license(id):
     data = request.json
     conn = get_db()
+    key_text_provided = 'license_key' in data
+    key_text = data.get('license_key') if key_text_provided else None
+    keys = normalize_license_keys(key_text) if key_text_provided else []
+    requested_total = int(data.get('total_quantity') or 0)
+    effective_total = len(keys) if key_text_provided and keys else requested_total
+    if effective_total <= 0:
+        conn.close()
+        return api_response(False, message="총수량 또는 시리얼키를 입력해주세요.", status=400)
+
     conn.execute('''
-        UPDATE SoftwareLicense SET software_name=?, category_id=?, vendor_id=?, version=?, license_type=?,
-                                   license_metric=?, license_key=?, total_quantity=?, purchase_date=?, purchase_cost=?,
-                                   subscription_start=?, subscription_end=?, is_subscription=?, auto_renewal=?, renewal_cost=?,
-                                   parent_license_id=?, license_manager_id=?, alert_days_before=?, notes=?, updated_at=CURRENT_TIMESTAMP
+        UPDATE SoftwareLicense
+        SET software_name=?, category_id=?, vendor_id=?, version=?, license_type=?, license_metric=?, license_key=COALESCE(?, license_key),
+            total_quantity=?, purchase_date=?, purchase_cost=?, subscription_start=?, subscription_end=?,
+            is_subscription=?, auto_renewal=?, renewal_cost=?, parent_license_id=?, license_manager_id=?,
+            alert_days_before=?, notes=?, license_status=COALESCE(?, license_status), updated_at=CURRENT_TIMESTAMP
         WHERE license_id=?
     ''', (data['software_name'], data['category_id'], data.get('vendor_id'), data.get('version'), data['license_type'],
-          data['license_metric'], data.get('license_key'), data['total_quantity'], data.get('purchase_date'),
+          data['license_metric'], key_text, effective_total, data.get('purchase_date'),
           data.get('purchase_cost'), data.get('subscription_start'), data.get('subscription_end'),
           1 if data.get('subscription_end') else 0, data.get('auto_renewal'), data.get('renewal_cost'),
-          data.get('parent_license_id'), data['license_manager_id'], data.get('alert_days_before', 30), data.get('notes'), id))
-    # Recalculate
-    conn.execute('''UPDATE SoftwareLicense SET available_quantity = total_quantity - used_quantity,
-                    compliance_status = CASE WHEN total_quantity >= used_quantity THEN '정상' ELSE '초과' END WHERE license_id = ?''', (id,))
+          data.get('parent_license_id'), data['license_manager_id'], data.get('alert_days_before', 30), data.get('notes'),
+          data.get('license_status'), id))
+    assigned_kept = []
+    if key_text_provided:
+        assigned_kept = upsert_license_keys(conn, id, key_text)
+    sync_license_quantities(conn, id)
+    if assigned_kept:
+        log_history(conn, 'LICENSE', id, 'KEYS_PARTIAL_PRESERVED',
+                    f'수정 중 할당된 키 {len(assigned_kept)}개 유지됨', None, {'keys': assigned_kept}, 1)
     conn.commit()
     conn.close()
     return api_response(message="라이선스 수정 완료")
+
+@app.route('/api/licenses/<int:id>/change-status', methods=['POST'])
+def change_license_status(id):
+    data = request.json
+    status = data.get('license_status')
+    if not status:
+        return api_response(False, message="상태값이 필요합니다.", status=400)
+    allowed_statuses = {'활성', '만료예정', '만료', '해지'}
+    if status not in allowed_statuses:
+        return api_response(False, message="허용되지 않은 상태값입니다.", status=400)
+    
+    conn = get_db()
+    try:
+        # Check current status
+        cur = conn.execute("SELECT license_status FROM SoftwareLicense WHERE license_id = ?", (id,))
+        row = cur.fetchone()
+        if not row:
+            return api_response(False, message="라이선스를 찾을 수 없습니다.", status=404)
+        
+        old_status = row['license_status']
+        if old_status == status:
+             return api_response(False, message="이미 해당 상태입니다.", status=400)
+
+        conn.execute("UPDATE SoftwareLicense SET license_status = ?, updated_at = CURRENT_TIMESTAMP WHERE license_id = ?", (status, id))
+        log_history(conn, 'LICENSE', id, 'STATUS_CHANGED', f'상태 변경: {old_status} -> {status}', None, {'old': old_status, 'new': status}, 1)
+        conn.commit()
+        return api_response(message=f"라이선스 상태가 '{status}'(으)로 변경되었습니다.")
+    except Exception as e:
+        conn.rollback()
+        return api_response(False, message=str(e), status=500)
+    finally:
+        conn.close()
 
 @app.route('/api/licenses/<int:id>', methods=['DELETE'])
 def delete_license(id):
@@ -780,11 +1164,31 @@ def delete_license(id):
 def get_license_assignments(id):
     conn = get_db()
     rows = conn.execute('''
-        SELECT la.*, u.user_name, u.employee_no, d.dept_name
+        SELECT la.*, u.user_name, u.employee_no, d.dept_name, a.asset_number,
+               lk.key_value AS assigned_key_value
         FROM LicenseAssignment la
         LEFT JOIN User u ON la.user_id = u.user_id
         LEFT JOIN Department d ON u.dept_id = d.dept_id
+        LEFT JOIN Asset a ON la.asset_id = a.asset_id
+        LEFT JOIN LicenseKey lk ON la.license_key_id = lk.license_key_id
         WHERE la.license_id = ? AND la.is_active = 1
+    ''', (id,)).fetchall()
+    conn.close()
+    return api_response(data=rows_to_list(rows))
+
+@app.route('/api/licenses/<int:id>/keys', methods=['GET'])
+def get_license_keys(id):
+    conn = get_db()
+    rows = conn.execute('''
+        SELECT lk.license_key_id, lk.key_value, lk.key_status, lk.assigned_date, lk.revoked_date, lk.notes,
+               la.assignment_id, la.user_id, la.asset_id,
+               u.user_name, u.employee_no, a.asset_number
+        FROM LicenseKey lk
+        LEFT JOIN LicenseAssignment la ON lk.assigned_assignment_id = la.assignment_id
+        LEFT JOIN User u ON la.user_id = u.user_id
+        LEFT JOIN Asset a ON la.asset_id = a.asset_id
+        WHERE lk.license_id = ?
+        ORDER BY lk.license_key_id
     ''', (id,)).fetchall()
     conn.close()
     return api_response(data=rows_to_list(rows))
@@ -795,11 +1199,57 @@ def assign_license(id):
     conn = get_db()
     today = date.today().isoformat()
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO LicenseAssignment (license_id, user_id, asset_id, assigned_date, is_active, assigned_by) VALUES (?, ?, ?, ?, 1, ?)',
-                   (id, data.get('user_id'), data.get('asset_id'), today, 1))
-    conn.execute('''UPDATE SoftwareLicense SET used_quantity = used_quantity + 1, available_quantity = available_quantity - 1,
-                    compliance_status = CASE WHEN available_quantity - 1 >= 0 THEN '정상' ELSE '초과' END, updated_at = CURRENT_TIMESTAMP WHERE license_id = ?''', (id,))
-    log_history(conn, 'LICENSE', id, 'LICENSE_ASSIGNED', f"라이선스 할당: user_id={data.get('user_id')}", None, data, 1)
+
+    lic = conn.execute('''
+        SELECT license_number, available_quantity
+        FROM SoftwareLicense
+        WHERE license_id = ? AND is_deleted = 0
+    ''', (id,)).fetchone()
+    if not lic:
+        conn.close()
+        return api_response(False, message="라이선스를 찾을 수 없습니다.", status=404)
+
+    key_total = conn.execute('''
+        SELECT COUNT(*) AS cnt
+        FROM LicenseKey
+        WHERE license_id = ? AND key_status != '폐기'
+    ''', (id,)).fetchone()['cnt']
+    selected_key = None
+    if key_total > 0:
+        selected_key = conn.execute('''
+            SELECT license_key_id, key_value
+            FROM LicenseKey
+            WHERE license_id = ? AND key_status = '가용'
+            ORDER BY license_key_id
+            LIMIT 1
+        ''', (id,)).fetchone()
+        if not selected_key:
+            conn.close()
+            return api_response(False, message="가용 시리얼키가 없습니다.", status=400)
+    elif lic['available_quantity'] <= 0:
+        conn.close()
+        return api_response(False, message="가용 수량이 없습니다.", status=400)
+
+    cursor.execute('''
+        INSERT INTO LicenseAssignment (license_id, user_id, asset_id, assigned_date, is_active, assigned_by, notes, license_key_id)
+        VALUES (?, ?, ?, ?, 1, ?, ?, ?)
+    ''', (id, data.get('user_id'), data.get('asset_id'), today, 1, data.get('notes'), selected_key['license_key_id'] if selected_key else None))
+    assignment_id = cursor.lastrowid
+    if selected_key:
+        conn.execute('''
+            UPDATE LicenseKey
+            SET key_status = '할당',
+                assigned_assignment_id = ?,
+                assigned_date = ?,
+                revoked_date = NULL
+            WHERE license_key_id = ?
+        ''', (assignment_id, today, selected_key['license_key_id']))
+
+    sync_license_quantities(conn, id)
+    log_detail = f"라이선스 할당: user_id={data.get('user_id')}"
+    if selected_key:
+        log_detail += f", key={selected_key['key_value']}"
+    log_history(conn, 'LICENSE', id, 'LICENSE_ASSIGNED', log_detail, None, data, 1)
     conn.commit()
     conn.close()
     return api_response(message="라이선스 할당 완료")
@@ -809,9 +1259,31 @@ def revoke_license(id):
     data = request.json
     conn = get_db()
     today = date.today().isoformat()
-    conn.execute('UPDATE LicenseAssignment SET is_active = 0, revoked_date = ? WHERE assignment_id = ?', (today, data['assignment_id']))
-    conn.execute('''UPDATE SoftwareLicense SET used_quantity = used_quantity - 1, available_quantity = available_quantity + 1,
-                    compliance_status = CASE WHEN available_quantity + 1 >= 0 THEN '정상' ELSE '초과' END, updated_at = CURRENT_TIMESTAMP WHERE license_id = ?''', (id,))
+    assignment = conn.execute('''
+        SELECT assignment_id, license_key_id
+        FROM LicenseAssignment
+        WHERE assignment_id = ? AND license_id = ? AND is_active = 1
+    ''', (data['assignment_id'], id)).fetchone()
+    if not assignment:
+        conn.close()
+        return api_response(False, message="활성 할당 정보를 찾을 수 없습니다.", status=404)
+
+    conn.execute('''
+        UPDATE LicenseAssignment
+        SET is_active = 0, revoked_date = ?
+        WHERE assignment_id = ?
+    ''', (today, data['assignment_id']))
+
+    if assignment['license_key_id']:
+        conn.execute('''
+            UPDATE LicenseKey
+            SET key_status = '가용',
+                assigned_assignment_id = NULL,
+                revoked_date = ?
+            WHERE license_key_id = ?
+        ''', (today, assignment['license_key_id']))
+
+    sync_license_quantities(conn, id)
     log_history(conn, 'LICENSE', id, 'LICENSE_REVOKED', f"라이선스 회수: assignment_id={data['assignment_id']}", None, data, 1)
     conn.commit()
     conn.close()
@@ -874,8 +1346,23 @@ def dashboard_summary():
     available = conn.execute("SELECT COUNT(*) as cnt FROM Asset WHERE is_deleted = 0 AND asset_status = '여유'").fetchone()['cnt']
     repair = conn.execute("SELECT COUNT(*) as cnt FROM Asset WHERE is_deleted = 0 AND asset_status = '수리중'").fetchone()['cnt']
     pending = conn.execute("SELECT COUNT(*) as cnt FROM Asset WHERE is_deleted = 0 AND asset_status = '폐기예정'").fetchone()['cnt']
+    disposed = conn.execute("SELECT COUNT(*) as cnt FROM Asset WHERE is_deleted = 0 AND asset_status = '폐기완료'").fetchone()['cnt']
+    license_counts = conn.execute('''
+        SELECT COALESCE(license_status, '활성') as license_status, COUNT(*) as cnt
+        FROM SoftwareLicense
+        WHERE is_deleted = 0
+        GROUP BY COALESCE(license_status, '활성')
+    ''').fetchall()
     conn.close()
-    return api_response(data={"total": total, "in_use": in_use, "available": available, "repair": repair, "pending_disposal": pending})
+    status_map = {row['license_status']: row['cnt'] for row in license_counts}
+    return api_response(data={
+        "total": total, "in_use": in_use, "available": available, "repair": repair,
+        "pending_disposal": pending, "disposed": disposed,
+        "license_active": status_map.get('활성', 0),
+        "license_expiring": status_map.get('만료예정', 0),
+        "license_expired": status_map.get('만료', 0),
+        "license_terminated": status_map.get('해지', 0)
+    })
 
 @app.route('/api/dashboard/by-category', methods=['GET'])
 def dashboard_by_category():
@@ -904,7 +1391,7 @@ def dashboard_by_location():
 def dashboard_license_status():
     conn = get_db()
     rows = conn.execute('''
-        SELECT software_name, total_quantity, used_quantity, available_quantity, compliance_status, subscription_end
+        SELECT software_name, total_quantity, used_quantity, available_quantity, compliance_status, subscription_end, license_status
         FROM SoftwareLicense WHERE is_deleted = 0 ORDER BY compliance_status DESC, software_name
     ''').fetchall()
     conn.close()
