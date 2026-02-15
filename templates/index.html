@@ -132,36 +132,102 @@
             color: var(--gray-800);
         }
 
+        .header-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--gray-600);
+            background: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+
+
         .header-actions {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .page-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-soft {
+            background: #fff;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-soft:hover {
+            background: var(--gray-100);
+            border-color: var(--gray-400);
         }
 
         /* Cards */
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
         }
 
         .card {
             background: white;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-200);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+            border-color: var(--gray-300);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card {
+                transition: box-shadow 0.2s ease;
+            }
+
+            .card:hover {
+                transform: none;
+            }
         }
 
         .card-title {
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             color: var(--gray-600);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            text-wrap: balance;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .card-value {
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: 700;
             color: var(--gray-800);
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .card-value.success {
@@ -229,6 +295,28 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
+        .management-page .control-panel {
+            background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .management-page .control-panel .header {
+            margin-bottom: 0;
+        }
+
+        .management-page .control-panel .header+.filters {
+            margin-top: 12px;
+        }
+
+        .management-page .table-container {
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+        }
+
         .table-header {
             padding: 16px 20px;
             border-bottom: 1px solid var(--gray-200);
@@ -248,6 +336,12 @@
             text-align: left;
             border-bottom: 1px solid var(--gray-200);
             font-size: 0.9rem;
+        }
+
+        .index-col {
+            width: 56px;
+            text-align: center;
+            color: var(--gray-600);
         }
 
         th {
@@ -294,6 +388,16 @@
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .compact-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 20px;
+        }
+
+        .form-group-full {
+            grid-column: 1 / -1;
         }
 
         /* Modal */
@@ -454,6 +558,11 @@
             gap: 12px;
             margin-bottom: 16px;
             flex-wrap: wrap;
+            align-items: center;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            padding: 10px;
         }
 
         .search-input {
@@ -461,6 +570,19 @@
             border: 1px solid var(--gray-300);
             border-radius: 8px;
             min-width: 250px;
+        }
+
+        .filter-search {
+            flex: 1 1 320px;
+            max-width: 420px;
+        }
+
+        .filter-select {
+            width: 170px;
+        }
+
+        .filter-select-wide {
+            width: 220px;
         }
 
         /* Tabs */
@@ -490,6 +612,101 @@
 
         .page.active {
             display: block;
+        }
+
+        /* Manual Page */
+        .manual-page {
+            display: grid;
+            gap: 16px;
+        }
+
+        .manual-hero {
+            background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 65%, #2563EB 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .manual-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            margin-bottom: 14px;
+        }
+
+        .manual-hero h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            letter-spacing: -0.01em;
+        }
+
+        .manual-hero p {
+            color: #DBEAFE;
+            line-height: 1.6;
+            max-width: 760px;
+        }
+
+        .manual-section {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .manual-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 10px;
+        }
+
+        .manual-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .manual-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .manual-card h3 {
+            font-size: 1rem;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .manual-card p {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .manual-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .manual-chip {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            color: var(--gray-700);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
         }
 
         /* Tabs */
@@ -596,6 +813,17 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            .compact-form {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-search,
+            .filter-select,
+            .filter-select-wide {
+                width: 100%;
+                max-width: none;
+            }
+
             .sidebar {
                 width: 60px;
             }
@@ -613,13 +841,42 @@
             .grid-2 {
                 grid-template-columns: 1fr;
             }
+
+            .cards {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 12px;
+            }
+
+            .card-value {
+                font-size: 1.875rem;
+            }
+
+            .manual-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .manual-hero h2 {
+                font-size: 1.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .card-value {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="app">
-        <!-- Sidebar -->
+        <!-- Sidebar Navigation -->
+        <!-- 관리 화면은 data-page 라우팅 기반의 단일 페이지 구조로 구성 -->
         <nav class="sidebar">
             <div class="logo">📊 <span>ITAM</span></div>
             <div class="nav-section">
@@ -643,15 +900,18 @@
                 <div class="nav-section-title">관리</div>
                 <div class="nav-item" data-page="inventories">📋 <span>실사관리</span></div>
                 <div class="nav-item" data-page="notifications">🔔 <span>알림</span></div>
+                <div class="nav-item" data-page="manual">📘 <span>설명서</span></div>
             </div>
         </nav>
 
         <!-- Main Content -->
+        <!-- 페이지 섹션은 .page 요소 집합이며 active class 토글로 화면 전환 -->
         <main class="main">
             <!-- Dashboard Page -->
             <div id="page-dashboard" class="page active">
                 <div class="header">
                     <h1>대시보드</h1>
+                    <div class="header-date" id="currentDate"></div>
                 </div>
                 <div class="cards" id="summary-cards"></div>
                 <div class="grid-2">
@@ -691,34 +951,43 @@
             </div>
 
             <!-- Assets Page -->
-            <div id="page-assets" class="page">
-                <div class="header">
-                    <h1>HW 자산 관리</h1>
-                    <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="downloadTemplate('hw')">📥 템플릿</button>
-                        <button class="btn btn-secondary" onclick="openImportModal('asset')">📤 Import</button>
-                        <button class="btn btn-secondary" onclick="exportAssets()">📊 Export</button>
-                        <button class="btn btn-primary" onclick="openAssetModal()">+ 자산 등록</button>
+            <div id="page-assets" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>HW 자산 관리</h1>
+                        <div class="header-actions">
+                            <div class="page-toolbar">
+                                <button class="btn btn-soft" onclick="downloadTemplate('hw')">📥 템플릿</button>
+                                <button class="btn btn-soft" onclick="openImportModal('asset')">📤 Import</button>
+                                <button class="btn btn-soft" onclick="exportAssets()">📊 Export</button>
+                            </div>
+                            <div class="page-toolbar">
+                                <button class="btn btn-primary" onclick="openAssetModal()">+ 자산 등록</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="filters">
-                    <input type="text" class="search-input" id="assetSearch" placeholder="자산번호, 자산명, 시리얼 검색..."
-                        onkeyup="loadAssets()">
-                    <select class="form-select" style="width:150px" id="assetLocationFilter" onchange="loadAssets()">
-                        <option value="">전체 사업장</option>
-                    </select>
-                    <select class="form-select" style="width:150px" id="assetStatusFilter" onchange="loadAssets()">
-                        <option value="">전체 상태</option>
-                        <option value="사용중">사용중</option>
-                        <option value="여유">여유</option>
-                        <option value="수리중">수리중</option>
-                        <option value="폐기예정">폐기예정</option>
-                    </select>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="assetSearch"
+                            placeholder="자산번호, 자산명, 시리얼 검색..." aria-label="HW 자산 검색" onkeyup="loadAssets()">
+                        <select class="form-select filter-select" id="assetLocationFilter" aria-label="HW 사업장 필터"
+                            onchange="loadAssets()">
+                            <option value="">전체 사업장</option>
+                        </select>
+                        <select class="form-select filter-select" id="assetStatusFilter" aria-label="HW 상태 필터"
+                            onchange="loadAssets()">
+                            <option value="">전체 상태</option>
+                            <option value="사용중">사용중</option>
+                            <option value="여유">여유</option>
+                            <option value="수리중">수리중</option>
+                            <option value="폐기예정">폐기예정</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>자산번호</th>
                                 <th>자산명</th>
                                 <th>카테고리</th>
@@ -734,28 +1003,49 @@
             </div>
 
             <!-- Licenses Page -->
-            <div id="page-licenses" class="page">
-                <div class="header">
-                    <h1>SW 라이선스 관리</h1>
-                    <div class="header-actions">
-                        <select class="form-select" id="licenseListFilter" onchange="loadLicenses()" style="min-width:180px">
-                            <option value="managed" selected>기본 보기 (활성/만료예정)</option>
-                            <option value="all">전체 보기</option>
+            <div id="page-licenses" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>SW 라이선스 관리</h1>
+                        <div class="header-actions">
+                            <div class="page-toolbar">
+                                <button class="btn btn-soft" onclick="downloadTemplate('license')">📥 템플릿</button>
+                                <button class="btn btn-soft" onclick="openImportModal('license')">📤 Import</button>
+                                <button class="btn btn-soft" onclick="exportLicenses()">📊 Export</button>
+                            </div>
+                            <div class="page-toolbar">
+                                <button class="btn btn-primary" onclick="openLicenseModal()">+ 라이선스 등록</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="licenseSearch"
+                            placeholder="라이선스번호, 소프트웨어명, 공급사 검색..." aria-label="SW 라이선스 검색" onkeyup="loadLicenses()">
+                        <select class="form-select filter-select" id="licenseVendorFilter" aria-label="SW 공급사 필터"
+                            onchange="loadLicenses()">
+                            <option value="">전체 공급사</option>
+                        </select>
+                        <select class="form-select filter-select" id="licenseUsedFilter" aria-label="SW 사용여부 필터"
+                            onchange="loadLicenses()">
+                            <option value="">전체 사용여부</option>
+                            <option value="used">사용중</option>
+                            <option value="unused">미사용</option>
+                        </select>
+                        <select class="form-select filter-select" id="licenseListFilter" aria-label="SW 상태 필터"
+                            onchange="loadLicenses()">
+                            <option value="" selected>전체 상태</option>
                             <option value="활성">활성</option>
                             <option value="만료예정">만료예정</option>
                             <option value="만료">만료</option>
                             <option value="해지">해지</option>
                         </select>
-                        <button class="btn btn-secondary" onclick="downloadTemplate('license')">📥 템플릿</button>
-                        <button class="btn btn-secondary" onclick="openImportModal('license')">📤 Import</button>
-                        <button class="btn btn-secondary" onclick="exportLicenses()">📊 Export</button>
-                        <button class="btn btn-primary" onclick="openLicenseModal()">+ 라이선스 등록</button>
                     </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>관리번호</th>
                                 <th>소프트웨어명</th>
                                 <th>유형</th>
@@ -772,15 +1062,28 @@
             </div>
 
             <!-- Locations Page -->
-            <div id="page-locations" class="page">
-                <div class="header">
-                    <h1>사업장 관리</h1>
-                    <button class="btn btn-primary" onclick="openLocationModal()">+ 사업장 등록</button>
+            <div id="page-locations" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>사업장 관리</h1>
+                        <button class="btn btn-primary" onclick="openLocationModal()">+ 사업장 등록</button>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="locationSearch"
+                            placeholder="코드, 사업장명, 주소, 건물 검색..." aria-label="사업장 검색" oninput="debouncedLoadLocations()">
+                        <select class="form-select filter-select" id="locationBuildingFilter" aria-label="사업장 건물 필터"
+                            onchange="loadLocations()">
+                            <option value="">전체 건물정보</option>
+                            <option value="has">건물 있음</option>
+                            <option value="none">건물 없음</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>코드</th>
                                 <th>사업장명</th>
                                 <th>주소</th>
@@ -794,15 +1097,33 @@
             </div>
 
             <!-- Departments Page -->
-            <div id="page-departments" class="page">
-                <div class="header">
-                    <h1>부서 관리</h1>
-                    <button class="btn btn-primary" onclick="openDeptModal()">+ 부서 등록</button>
+            <div id="page-departments" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>부서 관리</h1>
+                        <button class="btn btn-primary" onclick="openDeptModal()">+ 부서 등록</button>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="departmentSearch"
+                            placeholder="코드, 부서명 검색..." aria-label="부서 검색" oninput="debouncedLoadDepartments()">
+                        <select class="form-select filter-select" id="departmentLocationFilter" aria-label="부서 사업장 필터"
+                            onchange="loadDepartments()">
+                            <option value="">전체 사업장</option>
+                        </select>
+                        <select class="form-select filter-select" id="departmentLevelFilter" aria-label="부서 레벨 필터"
+                            onchange="loadDepartments()">
+                            <option value="">전체 레벨</option>
+                            <option value="1">레벨 1</option>
+                            <option value="2">레벨 2</option>
+                            <option value="3">레벨 3</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>코드</th>
                                 <th>부서명</th>
                                 <th>레벨</th>
@@ -816,15 +1137,32 @@
             </div>
 
             <!-- Users Page -->
-            <div id="page-users" class="page">
-                <div class="header">
-                    <h1>사용자 관리</h1>
-                    <button class="btn btn-primary" onclick="openUserModal()">+ 사용자 등록</button>
+            <div id="page-users" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>사용자 관리</h1>
+                        <button class="btn btn-primary" onclick="openUserModal()">+ 사용자 등록</button>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="userSearch"
+                            placeholder="사번, 이름, 이메일 검색..." aria-label="사용자 검색" oninput="debouncedLoadUsers()">
+                        <select class="form-select filter-select" id="userLocationFilter" aria-label="사용자 사업장 필터"
+                            onchange="loadUsers()">
+                            <option value="">전체 사업장</option>
+                        </select>
+                        <select class="form-select filter-select" id="userStatusFilter" aria-label="사용자 재직 상태 필터"
+                            onchange="loadUsers()">
+                            <option value="">전체 상태</option>
+                            <option value="active">재직</option>
+                            <option value="inactive">퇴직</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>사번</th>
                                 <th>이름</th>
                                 <th>이메일</th>
@@ -840,15 +1178,35 @@
             </div>
 
             <!-- Categories Page -->
-            <div id="page-categories" class="page">
-                <div class="header">
-                    <h1>카테고리 관리</h1>
-                    <button class="btn btn-primary" onclick="openCategoryModal()">+ 카테고리 등록</button>
+            <div id="page-categories" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>카테고리 관리</h1>
+                        <button class="btn btn-primary" onclick="openCategoryModal()">+ 카테고리 등록</button>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="categorySearch"
+                            placeholder="코드, 카테고리명 검색..." aria-label="카테고리 검색" oninput="debouncedLoadCategories()">
+                        <select class="form-select filter-select" id="categoryTypeFilter" aria-label="카테고리 자산유형 필터"
+                            onchange="loadCategories()">
+                            <option value="">전체 유형</option>
+                            <option value="HW">HW</option>
+                            <option value="SW">SW</option>
+                        </select>
+                        <select class="form-select filter-select" id="categoryLevelFilter" aria-label="카테고리 레벨 필터"
+                            onchange="loadCategories()">
+                            <option value="">전체 레벨</option>
+                            <option value="1">레벨 1</option>
+                            <option value="2">레벨 2</option>
+                            <option value="3">레벨 3</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>코드</th>
                                 <th>카테고리명</th>
                                 <th>레벨</th>
@@ -864,15 +1222,31 @@
             </div>
 
             <!-- Vendors Page -->
-            <div id="page-vendors" class="page">
-                <div class="header">
-                    <h1>공급업체 관리</h1>
-                    <button class="btn btn-primary" onclick="openVendorModal()">+ 공급업체 등록</button>
+            <div id="page-vendors" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>공급업체 관리</h1>
+                        <button class="btn btn-primary" onclick="openVendorModal()">+ 공급업체 등록</button>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="vendorSearch"
+                            placeholder="업체명, 담당자, 연락처, 이메일 검색..." aria-label="공급업체 검색"
+                            oninput="debouncedLoadVendors()">
+                        <select class="form-select filter-select" id="vendorTypeFilter" aria-label="공급업체 유형 필터"
+                            onchange="loadVendors()">
+                            <option value="">전체 구분</option>
+                            <option value="제조사">제조사</option>
+                            <option value="판매사">판매사</option>
+                            <option value="유지보수">유지보수</option>
+                            <option value="종합">종합</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>업체명</th>
                                 <th>구분</th>
                                 <th>담당자</th>
@@ -887,15 +1261,26 @@
             </div>
 
             <!-- EOS Page -->
-            <div id="page-eos" class="page">
-                <div class="header">
-                    <h1>EOS 정보 관리</h1>
-                    <button class="btn btn-primary" onclick="openEOSModal()">+ EOS 등록</button>
+            <div id="page-eos" class="page management-page">
+                <div class="control-panel">
+                    <div class="header">
+                        <h1>EOS 정보 관리</h1>
+                        <button class="btn btn-primary" onclick="openEOSModal()">+ EOS 등록</button>
+                    </div>
+                    <div class="filters">
+                        <input type="text" class="search-input filter-search" id="eosSearch"
+                            placeholder="제품명, 버전, 제조사 검색..." aria-label="EOS 검색" oninput="debouncedLoadEOS()">
+                        <select class="form-select filter-select" id="eosTypeFilter" aria-label="EOS 유형 필터"
+                            onchange="loadEOS()">
+                            <option value="">전체 유형</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th class="index-col">번호</th>
                                 <th>제품명</th>
                                 <th>버전</th>
                                 <th>유형</th>
@@ -942,6 +1327,79 @@
                     <div id="notificationsList" style="padding:20px"></div>
                 </div>
             </div>
+
+            <!-- Manual Page -->
+            <div id="page-manual" class="page">
+                <div class="manual-page">
+                    <section class="manual-hero">
+                        <div class="manual-badge">Manufacturing DX Team</div>
+                        <h2>복잡한 자산 관리, 이제 심플하게.</h2>
+                        <p>
+                            IT 자산 운영의 핵심 데이터를 한 화면에서 관리하고, 실무자가 빠르게 판단할 수 있도록 설계한
+                            내부 전용 IT Asset Management System입니다.
+                        </p>
+                    </section>
+
+                    <section class="manual-section">
+                        <div class="manual-title">Why It Exists</div>
+                        <p style="color:var(--gray-600);line-height:1.6;margin-bottom:12px;">
+                            분산된 엑셀/메일 기반 운영에서 발생하던 누락, 중복, 이력 추적 문제를 줄이고
+                            자산·라이선스의 수명주기를 표준화하기 위해 구축되었습니다.
+                        </p>
+                        <div class="manual-chips">
+                            <span class="manual-chip">운영 표준화</span>
+                            <span class="manual-chip">추적 가능성</span>
+                            <span class="manual-chip">감사 대응력</span>
+                        </div>
+                    </section>
+
+                    <section class="manual-grid">
+                        <article class="manual-card">
+                            <h3>Asset Management</h3>
+                            <p>HW 등록, 상태 변경, 사용자 배정, 변경이력까지 한 흐름으로 관리합니다.</p>
+                        </article>
+                        <article class="manual-card">
+                            <h3>License Management</h3>
+                            <p>라이선스 수량, 가용 현황, 만료 상태를 통합해 컴플라이언스를 유지합니다.</p>
+                        </article>
+                        <article class="manual-card">
+                            <h3>Master Data</h3>
+                            <p>사업장/부서/사용자/카테고리/공급업체를 일관된 구조로 운영합니다.</p>
+                        </article>
+                        <article class="manual-card">
+                            <h3>Search & Filter</h3>
+                            <p>화면별 검색/필터/인덱스로 원하는 대상을 빠르게 찾고 범위를 좁힐 수 있습니다.</p>
+                        </article>
+                        <article class="manual-card">
+                            <h3>Inventory & Alerts</h3>
+                            <p>실사 일정과 알림 중심으로 누락 없이 운영 상황을 점검합니다.</p>
+                        </article>
+                        <article class="manual-card">
+                            <h3>Import / Export</h3>
+                            <p>템플릿 기반 대량 등록과 내보내기로 초기 구축과 운영 효율을 높입니다.</p>
+                        </article>
+                    </section>
+
+                    <section class="manual-section">
+                        <div class="manual-title">Tech Stack</div>
+                        <div class="manual-chips">
+                            <span class="manual-chip">Python</span>
+                            <span class="manual-chip">Flask</span>
+                            <span class="manual-chip">SQLite</span>
+                            <span class="manual-chip">Vanilla JavaScript</span>
+                            <span class="manual-chip">Chart.js</span>
+                        </div>
+                    </section>
+
+                    <section class="manual-section">
+                        <div class="manual-title">Security & Backup</div>
+                        <p style="color:var(--gray-600);line-height:1.6;">
+                            내부망 기반 운영을 기본으로 하며, 백업 정책에 따라 데이터를 주기적으로 보존합니다.
+                            운영 환경에서는 AWS S3 자동 백업 정책을 통해 장애 시 복구 가능성을 높입니다.
+                        </p>
+                    </section>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -952,7 +1410,7 @@
                 <h3>자산 등록</h3><button class="modal-close" onclick="closeModal('assetModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="assetForm">
+                <form id="assetForm" class="compact-form">
                     <div class="form-group"><label class="form-label">자산명 *</label><input type="text" class="form-input"
                             name="asset_name" required></div>
                     <div class="form-group"><label class="form-label">카테고리 *</label><select class="form-select"
@@ -992,7 +1450,7 @@
                 <h3>라이선스 등록</h3><button class="modal-close" onclick="closeModal('licenseModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="licenseForm">
+                <form id="licenseForm" class="compact-form">
                     <div class="form-group"><label class="form-label">소프트웨어명 *</label><input type="text"
                             class="form-input" name="software_name" required></div>
                     <div class="form-group"><label class="form-label">카테고리 *</label><select class="form-select"
@@ -1012,7 +1470,8 @@
                             <option value="concurrent">동시접속</option>
                         </select>
                     </div>
-                    <div class="form-group"><label class="form-label">시리얼키 / 라이선스 키 (줄바꿈으로 일괄 등록)</label>
+                    <div class="form-group form-group-full"><label class="form-label">시리얼키 / 라이선스 키 (줄바꿈으로 일괄
+                            등록)</label>
                         <textarea class="form-input" name="license_key" rows="2"
                             placeholder="XXXX-XXXX-XXXX-0001&#10;XXXX-XXXX-XXXX-0002"></textarea>
                     </div>
@@ -1244,7 +1703,10 @@
             <div class="modal-body">
                 <p style="margin-bottom:16px;color:var(--gray-600)">엑셀 파일(.xlsx)을 선택하세요. 먼저 템플릿을 다운로드하여 양식에 맞게 작성해주세요.
                 </p>
-                <input type="file" id="importFile" accept=".xlsx,.xls" class="form-input">
+                <div class="form-group">
+                    <label class="form-label">엑셀 파일</label>
+                    <input type="file" id="importFile" accept=".xlsx,.xls" class="form-input">
+                </div>
                 <input type="hidden" id="importType">
                 <div id="importResult" style="margin-top:16px"></div>
             </div>
@@ -1422,8 +1884,10 @@
                     </div>
                 </div>
                 <div id="licenseKeysPanel" style="display:none">
-                    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 10px">
-                        <input type="text" class="form-input" id="licenseKeySearch" placeholder="키/상태/사용자 검색" oninput="renderLicenseKeysTable()" style="max-width:280px">
+                    <div
+                        style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 10px">
+                        <input type="text" class="form-input" id="licenseKeySearch" placeholder="키/상태/사용자 검색"
+                            oninput="renderLicenseKeysTable()" style="max-width:280px">
                         <div style="display:flex;gap:8px;align-items:center">
                             <span id="licenseKeyCount" style="font-size:0.875rem;color:var(--gray-600)"></span>
                             <button class="btn btn-secondary btn-sm" onclick="copyLicenseKeys()">키 복사</button>
@@ -1598,7 +2062,9 @@
     </div>
 
     <script>
-        // API Helper
+        // API Layer
+        // - 모든 백엔드 API 호출을 하나의 helper로 통합
+        // - JSON 응답만 처리하고 비-JSON 응답은 실패 객체로 정규화
         const api = {
             request: async (url, options = {}) => {
                 const res = await fetch(url, options);
@@ -1619,8 +2085,10 @@
             delete: async (url) => api.request(url, { method: 'DELETE' })
         };
 
-        // Global Data
-        let locations = [], departments = [], users = [], categories = [], vendors = [];
+        // Global Data Cache
+        // - 기준정보는 자주 쓰는 select와 목록 렌더링에서 재사용
+        // - EOS는 페이지/필터에서 함께 사용되는 전역 참조 데이터
+        let locations = [], departments = [], users = [], categories = [], vendors = [], eosInfos = [];
         const dashboardCharts = {
             category: null,
             location: null,
@@ -1637,6 +2105,8 @@
         }
 
         // Navigation
+        // - data-page 기반 라우팅 + 페이지 표시 토글
+        // - 페이지 전환 시 해당 페이지 데이터 로더 1개만 호출
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -1648,16 +2118,23 @@
         });
 
         function loadPageData(page) {
+            // 각 페이지별 로더를 한 곳에서 분기해 유지보수 포인트를 제한
             const loaders = {
                 dashboard: loadDashboard, assets: loadAssets, licenses: loadLicenses,
                 locations: loadLocations, departments: loadDepartments, users: loadUsers,
                 categories: loadCategories, vendors: loadVendors, eos: loadEOS,
-                inventories: loadInventories, notifications: loadNotifications
+                inventories: loadInventories, notifications: loadNotifications,
+                manual: loadManual
             };
+            if (page === 'licenses') renderLicenseVendorFilter();
             if (loaders[page]) loaders[page]();
         }
 
+        // 설명서 페이지는 템플릿 정적 노출이므로 별도 API 호출 없이도 안정적으로 빠르게 표시
+        function loadManual() { }
+
         // Modal Helpers
+        // - 공통 모달 열기/닫기 로직 + 이벤트/폼 데이터 파서 유틸을 분리
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         function getEventAndId(arg1, arg2) {
@@ -1678,20 +2155,81 @@
             return data;
         }
 
+        // Debounced 검색 헬퍼
+        // - oninput/keyup 입력이 잦을 때 API 호출을 최소화
+        const searchDebounceTimers = {};
+        function runDebouncedLoad(key, loader, delay = 250) {
+            clearTimeout(searchDebounceTimers[key]);
+            searchDebounceTimers[key] = setTimeout(() => loader(), delay);
+        }
+        function debouncedLoadLocations() { runDebouncedLoad('locations', loadLocations); }
+        function debouncedLoadDepartments() { runDebouncedLoad('departments', loadDepartments); }
+        function debouncedLoadUsers() { runDebouncedLoad('users', loadUsers); }
+        function debouncedLoadCategories() { runDebouncedLoad('categories', loadCategories); }
+        function debouncedLoadVendors() { runDebouncedLoad('vendors', loadVendors); }
+        function debouncedLoadEOS() { runDebouncedLoad('eos', loadEOS); }
+
+        // 숫자 포맷팅 유틸리티 (KO locale)
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '0';
+            return new Intl.NumberFormat('ko-KR').format(num);
+        }
+
         // Dashboard
+        // - 카드(요약 지표), 카테고리/위치/부서 차트, 최근활동을 한 번에 로딩
         async function loadDashboard() {
             const summary = await api.get('/api/dashboard/summary');
             if (summary.success) {
                 const d = summary.data;
                 document.getElementById('summary-cards').innerHTML = `
-                    <div class="card"><div class="card-title">총 자산</div><div class="card-value">${d.total}</div></div>
-                    <div class="card"><div class="card-title">사용중</div><div class="card-value success">${d.in_use}</div></div>
-                    <div class="card"><div class="card-title">여유</div><div class="card-value">${d.available}</div></div>
-                    <div class="card"><div class="card-title">수리중</div><div class="card-value warning">${d.repair}</div></div>
-                    <div class="card"><div class="card-title">폐기예정</div><div class="card-value danger">${d.pending_disposal}</div></div>
-                    <div class="card"><div class="card-title">폐기완료</div><div class="card-value" style="color:var(--gray-500)">${d.disposed || 0}</div></div>
-                    <div class="card"><div class="card-title">라이선스 만료 임박</div><div class="card-value warning">${d.license_expiring || 0}</div></div>
-                    <div class="card"><div class="card-title">라이선스 만료</div><div class="card-value danger">${d.license_expired || 0}</div></div>
+                    <div class="card" role="article" aria-labelledby="card-total">
+                        <div class="card-title" id="card-total">
+                            <span aria-hidden="true">📦</span> 총 자산
+                        </div>
+                        <div class="card-value" aria-label="${d.total}개">${formatNumber(d.total)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-in-use">
+                        <div class="card-title" id="card-in-use">
+                            <span aria-hidden="true">✅</span> 사용중
+                        </div>
+                        <div class="card-value success" aria-label="${d.in_use}개">${formatNumber(d.in_use)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-available">
+                        <div class="card-title" id="card-available">
+                            <span aria-hidden="true">💤</span> 여유
+                        </div>
+                        <div class="card-value" aria-label="${d.available}개">${formatNumber(d.available)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-repair">
+                        <div class="card-title" id="card-repair">
+                            <span aria-hidden="true">🔧</span> 수리중
+                        </div>
+                        <div class="card-value warning" aria-label="${d.repair}개">${formatNumber(d.repair)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-disposal">
+                        <div class="card-title" id="card-disposal">
+                            <span aria-hidden="true">⚠️</span> 폐기예정
+                        </div>
+                        <div class="card-value danger" aria-label="${d.pending_disposal}개">${formatNumber(d.pending_disposal)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-disposed">
+                        <div class="card-title" id="card-disposed">
+                            <span aria-hidden="true">🗑️</span> 폐기완료
+                        </div>
+                        <div class="card-value" style="color:var(--gray-500)" aria-label="${d.disposed || 0}개">${formatNumber(d.disposed || 0)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-lic-expiring">
+                        <div class="card-title" id="card-lic-expiring">
+                            <span aria-hidden="true">⏰</span> 라이선스 만료 임박
+                        </div>
+                        <div class="card-value warning" aria-label="${d.license_expiring || 0}건">${formatNumber(d.license_expiring || 0)}</div>
+                    </div>
+                    <div class="card" role="article" aria-labelledby="card-lic-expired">
+                        <div class="card-title" id="card-lic-expired">
+                            <span aria-hidden="true">❌</span> 라이선스 만료
+                        </div>
+                        <div class="card-value danger" aria-label="${d.license_expired || 0}건">${formatNumber(d.license_expired || 0)}</div>
+                    </div>
                 `;
             }
 
@@ -1764,7 +2302,8 @@
                 activity.data.slice(0, 10).map(a => `<div class="activity-item"><div class="activity-time">${a.action_date}</div><div class="activity-text">${a.action_detail || a.action_type}</div></div>`).join('') : '';
         }
 
-        // Assets
+        // Assets (HW 자산)
+        // - 검색/필터 조건으로 API 조회 후 응답 순번을 표시 인덱스로 사용
         async function loadAssets() {
             const keyword = document.getElementById('assetSearch')?.value || '';
             const loc = document.getElementById('assetLocationFilter')?.value || '';
@@ -1775,7 +2314,8 @@
             if (status) url += `status=${status}&`;
             const res = await api.get(url);
             if (res.success) {
-                document.getElementById('assetsTable').innerHTML = res.data.map(a => `<tr>
+                document.getElementById('assetsTable').innerHTML = res.data.map((a, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td>
                     <td>${a.asset_number}</td><td>${a.asset_name}</td><td>${a.category_name || ''}</td>
                     <td><span class="badge ${a.asset_status === '사용중' ? 'badge-success' : a.asset_status === '여유' ? 'badge-info' : 'badge-warning'}">${a.asset_status}</span></td>
                     <td>${a.location_name || ''}</td><td>${a.current_user_name || '-'}</td>
@@ -1806,7 +2346,8 @@
             }
         }
 
-        // Licenses
+        // Licenses (SW 라이선스)
+        // - 검색/공급사/사용여부/상태 조건으로 화면 단에서 2차 필터링
         function getLicenseStatusBadgeClass(status) {
             if (status === '만료' || status === '해지') return 'badge-danger';
             if (status === '만료예정') return 'badge-warning';
@@ -1815,14 +2356,26 @@
         async function loadLicenses() {
             const res = await api.get('/api/licenses');
             if (res.success) {
-                const filter = document.getElementById('licenseListFilter')?.value || 'managed';
+                const keyword = (document.getElementById('licenseSearch')?.value || '').trim().toLowerCase();
+                const vendorId = document.getElementById('licenseVendorFilter')?.value || '';
+                const usedFilter = document.getElementById('licenseUsedFilter')?.value || '';
+                const statusFilter = document.getElementById('licenseListFilter')?.value || '';
                 const filtered = res.data.filter(l => {
+                    const keywordMatch = !keyword
+                        || (l.license_number || '').toLowerCase().includes(keyword)
+                        || (l.software_name || '').toLowerCase().includes(keyword)
+                        || (l.vendor_name || '').toLowerCase().includes(keyword);
+                    const vendorMatch = !vendorId || String(l.vendor_id || '') === String(vendorId);
+                    const used = Number(l.used_quantity || 0);
+                    const usedMatch = usedFilter === 'used' ? used > 0
+                        : usedFilter === 'unused' ? used === 0
+                            : true;
                     const status = l.license_status || '활성';
-                    if (filter === 'all') return true;
-                    if (filter === 'managed') return status === '활성' || status === '만료예정';
-                    return status === filter;
+                    const statusMatch = !statusFilter || status === statusFilter;
+                    return keywordMatch && vendorMatch && usedMatch && statusMatch;
                 });
-                document.getElementById('licensesTable').innerHTML = filtered.map(l => `<tr>
+                document.getElementById('licensesTable').innerHTML = filtered.map((l, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td>
                     <td>${l.license_number}</td>
                     <td class="link-text" onclick="openLicenseDetail(${l.license_id})">${l.software_name}</td>
                     <td>${l.license_type}</td>
@@ -1892,6 +2445,7 @@
             else alert(finalRes.message);
         }
         // Asset Detail Functions
+        // - 상세 탭 및 상태/배정/이력 조회를 분기해서 렌더링
         let currentAssetId = null;
         async function openAssetDetail(id) {
             currentAssetId = id;
@@ -2040,6 +2594,7 @@
         }
 
         // License Detail Functions
+        // - 배정 내역 탭과 시리얼키 탭을 분리 관리하고 검색/복사/엑셀 다운로드를 지원
         let currentLicenseId = null, currentLicenseMetric = null, currentLicenseKeys = [];
         function switchLicenseDetailTab(tabName) {
             document.querySelectorAll('#licenseDetailTabs .tab').forEach(tab => {
@@ -2251,13 +2806,29 @@
             } else alert(res.message);
         }
 
-        // Locations
+        // Locations (사업장)
+        // - 검색/건물보유 필터링 + 전역 locations 캐시 갱신
         async function loadLocations() {
             const res = await api.get('/api/locations');
             if (res.success) {
                 locations = res.data;
                 document.getElementById('assetLocationFilter').innerHTML = '<option value="">전체 사업장</option>' + locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
-                document.getElementById('locationsTable').innerHTML = res.data.map(l => `<tr>
+                const keyword = (document.getElementById('locationSearch')?.value || '').trim().toLowerCase();
+                const buildingFilter = document.getElementById('locationBuildingFilter')?.value || '';
+                const filtered = res.data.filter(l => {
+                    const searchMatched = !keyword
+                        || (l.location_code || '').toLowerCase().includes(keyword)
+                        || (l.location_name || '').toLowerCase().includes(keyword)
+                        || (l.address || '').toLowerCase().includes(keyword)
+                        || (l.building || '').toLowerCase().includes(keyword);
+                    const hasBuilding = Boolean((l.building || '').trim());
+                    const buildingMatched = buildingFilter === 'has' ? hasBuilding
+                        : buildingFilter === 'none' ? !hasBuilding
+                            : true;
+                    return searchMatched && buildingMatched;
+                });
+                document.getElementById('locationsTable').innerHTML = filtered.map((l, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td>
                     <td>${l.location_code}</td><td>${l.location_name}</td><td>${l.address || ''}</td><td>${l.building || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="editLocation(${l.location_id})">수정</button>
@@ -2287,12 +2858,31 @@
             } else alert(res.message);
         }
 
-        // Departments
+        // Departments (부서)
+        // - 레벨/사업장 조건으로 부서 목록을 좁혀서 렌더링
         async function loadDepartments() {
             const res = await api.get('/api/departments');
             if (res.success) {
                 departments = res.data;
-                document.getElementById('departmentsTable').innerHTML = res.data.map(d => `<tr>
+                const locationFilterSelect = document.getElementById('departmentLocationFilter');
+                if (locationFilterSelect) {
+                    const selected = locationFilterSelect.value;
+                    locationFilterSelect.innerHTML = '<option value="">전체 사업장</option>' + locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
+                    if (selected) locationFilterSelect.value = selected;
+                }
+                const keyword = (document.getElementById('departmentSearch')?.value || '').trim().toLowerCase();
+                const locationFilter = document.getElementById('departmentLocationFilter')?.value || '';
+                const levelFilter = document.getElementById('departmentLevelFilter')?.value || '';
+                const filtered = res.data.filter(d => {
+                    const searchMatched = !keyword
+                        || (d.dept_code || '').toLowerCase().includes(keyword)
+                        || (d.dept_name || '').toLowerCase().includes(keyword);
+                    const locationMatched = !locationFilter || String(d.location_id || '') === String(locationFilter);
+                    const levelMatched = !levelFilter || String(d.dept_level || '') === String(levelFilter);
+                    return searchMatched && locationMatched && levelMatched;
+                });
+                document.getElementById('departmentsTable').innerHTML = filtered.map((d, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td>
                     <td>${d.dept_code}</td><td>${d.dept_name}</td><td>${d.dept_level}</td><td>${d.location_name || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="editDept(${d.dept_id})">수정</button>
@@ -2341,12 +2931,35 @@
             } else alert(res.message);
         }
 
-        // Users
+        // Users (사용자)
+        // - 사번/이름/이메일 검색 + 사업장/재직 상태 필터
         async function loadUsers() {
             const res = await api.get('/api/users');
             if (res.success) {
                 users = res.data;
-                document.getElementById('usersTable').innerHTML = res.data.map(u => `<tr>
+                const locationFilterSelect = document.getElementById('userLocationFilter');
+                if (locationFilterSelect) {
+                    const selected = locationFilterSelect.value;
+                    locationFilterSelect.innerHTML = '<option value="">전체 사업장</option>' + locations.map(l => `<option value="${l.location_id}">${l.location_name}</option>`).join('');
+                    if (selected) locationFilterSelect.value = selected;
+                }
+                const keyword = (document.getElementById('userSearch')?.value || '').trim().toLowerCase();
+                const locationFilter = document.getElementById('userLocationFilter')?.value || '';
+                const statusFilter = document.getElementById('userStatusFilter')?.value || '';
+                const filtered = res.data.filter(u => {
+                    const searchMatched = !keyword
+                        || (u.employee_no || '').toLowerCase().includes(keyword)
+                        || (u.user_name || '').toLowerCase().includes(keyword)
+                        || (u.email || '').toLowerCase().includes(keyword);
+                    const locationMatched = !locationFilter || String(u.location_id || '') === String(locationFilter);
+                    const isActive = Boolean(u.is_active);
+                    const statusMatched = statusFilter === 'active' ? isActive
+                        : statusFilter === 'inactive' ? !isActive
+                            : true;
+                    return searchMatched && locationMatched && statusMatched;
+                });
+                document.getElementById('usersTable').innerHTML = filtered.map((u, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td>
                     <td>${u.employee_no}</td><td>${u.user_name}</td><td>${u.email}</td><td>${u.dept_name || ''}</td><td>${u.location_name || ''}</td>
                     <td><span class="badge ${u.is_active ? 'badge-success' : 'badge-danger'}">${u.is_active ? '재직' : '퇴직'}</span></td>
                     <td>
@@ -2446,15 +3059,27 @@
             }
         }
 
-        // Categories
+        // Categories (카테고리)
+        // - 유형(HW/SW)과 레벨로 검색 조건 분기 + 계층 표시(레벨에 따른 들여쓰기)
         async function loadCategories() {
             const res = await api.get('/api/categories');
             if (res.success) {
                 categories = res.data;
-                document.getElementById('categoriesTable').innerHTML = res.data.map(c => {
+                const keyword = (document.getElementById('categorySearch')?.value || '').trim().toLowerCase();
+                const typeFilter = document.getElementById('categoryTypeFilter')?.value || '';
+                const levelFilter = document.getElementById('categoryLevelFilter')?.value || '';
+                const filtered = res.data.filter(c => {
+                    const searchMatched = !keyword
+                        || (c.category_code || '').toLowerCase().includes(keyword)
+                        || (c.category_name || '').toLowerCase().includes(keyword);
+                    const typeMatched = !typeFilter || c.asset_type === typeFilter;
+                    const levelMatched = !levelFilter || String(c.category_level || '') === String(levelFilter);
+                    return searchMatched && typeMatched && levelMatched;
+                });
+                document.getElementById('categoriesTable').innerHTML = filtered.map((c, idx) => {
                     const parent = categories.find(p => p.category_id === c.parent_category_id);
                     return `<tr>
-                    <td>${c.category_code}</td><td>${'　'.repeat(c.category_level - 1)}${c.category_name}</td>
+                    <td class="index-col">${idx + 1}</td><td>${c.category_code}</td><td>${'　'.repeat(c.category_level - 1)}${c.category_name}</td>
                     <td>${c.category_level}</td><td>${c.asset_type}</td><td>${parent ? parent.category_name : '-'}</td><td>${c.useful_life_months || '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="editCategory(${c.category_id})">수정</button>
@@ -2524,19 +3149,32 @@
             } else alert(res.message);
         }
 
-        // Vendors
+        // Vendors (공급업체)
+        // - 키워드 및 유형 필터로 목록 축소, 라이선스 공급사 select 옵션도 동기화
         async function loadVendors() {
             const res = await api.get('/api/vendors');
             if (res.success) {
                 vendors = res.data;
-                document.getElementById('vendorsTable').innerHTML = res.data.map(v => `<tr>
-                    <td>${v.vendor_name}</td><td>${v.vendor_type}</td><td>${v.contact_name || ''}</td>
+                const keyword = (document.getElementById('vendorSearch')?.value || '').trim().toLowerCase();
+                const typeFilter = document.getElementById('vendorTypeFilter')?.value || '';
+                const filtered = res.data.filter(v => {
+                    const searchMatched = !keyword
+                        || (v.vendor_name || '').toLowerCase().includes(keyword)
+                        || (v.contact_name || '').toLowerCase().includes(keyword)
+                        || (v.contact_phone || '').toLowerCase().includes(keyword)
+                        || (v.contact_email || '').toLowerCase().includes(keyword);
+                    const typeMatched = !typeFilter || v.vendor_type === typeFilter;
+                    return searchMatched && typeMatched;
+                });
+                document.getElementById('vendorsTable').innerHTML = filtered.map((v, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td><td>${v.vendor_name}</td><td>${v.vendor_type}</td><td>${v.contact_name || ''}</td>
                     <td>${v.contact_phone || ''}</td><td>${v.contact_email || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="editVendor(${v.vendor_id})">수정</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteVendor(${v.vendor_id})">삭제</button>
                     </td>
                 </tr>`).join('');
+                renderLicenseVendorFilter();
             }
         }
         function openVendorModal() {
@@ -2574,12 +3212,31 @@
             } else alert(res.message);
         }
 
-        // EOS
+        // EOS 정보
+        // - 제품 검색 + 유형 select 동적 갱신 + EOS 만료 상태 시각 강조
         async function loadEOS() {
             const res = await api.get('/api/eos-info');
             if (res.success) {
-                document.getElementById('eosTable').innerHTML = res.data.map(e => `<tr>
-                    <td>${e.product_name}</td><td>${e.product_version || ''}</td><td>${e.product_type}</td><td>${e.vendor || ''}</td>
+                eosInfos = res.data;
+                const typeFilterSelect = document.getElementById('eosTypeFilter');
+                if (typeFilterSelect) {
+                    const selected = typeFilterSelect.value;
+                    const types = [...new Set(eosInfos.map(e => e.product_type).filter(Boolean))];
+                    typeFilterSelect.innerHTML = '<option value="">전체 유형</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+                    if (selected) typeFilterSelect.value = selected;
+                }
+                const keyword = (document.getElementById('eosSearch')?.value || '').trim().toLowerCase();
+                const typeFilter = document.getElementById('eosTypeFilter')?.value || '';
+                const filtered = eosInfos.filter(e => {
+                    const searchMatched = !keyword
+                        || (e.product_name || '').toLowerCase().includes(keyword)
+                        || (e.product_version || '').toLowerCase().includes(keyword)
+                        || (e.vendor || '').toLowerCase().includes(keyword);
+                    const typeMatched = !typeFilter || e.product_type === typeFilter;
+                    return searchMatched && typeMatched;
+                });
+                document.getElementById('eosTable').innerHTML = filtered.map((e, idx) => `<tr>
+                    <td class="index-col">${idx + 1}</td><td>${e.product_name}</td><td>${e.product_version || ''}</td><td>${e.product_type}</td><td>${e.vendor || ''}</td>
                     <td><span class="badge ${new Date(e.eos_date) < new Date() ? 'badge-danger' : 'badge-info'}">${e.eos_date}</span></td>
                     <td>${e.notes || ''}</td>
                     <td>
@@ -2634,7 +3291,8 @@
             } else alert(res.message);
         }
 
-        // Inventories
+        // Inventories (실사 관리)
+        // - 실사 일정과 상태를 조회만 하는 가벼운 리스트 영역
         async function loadInventories() {
             const res = await api.get('/api/inventories');
             if (res.success) {
@@ -2660,6 +3318,7 @@
         }
 
         // Import/Export Functions
+        // - 템플릿 다운로드, 파일 업로드, 대량 내보내기를 통합된 흐름으로 관리
         function downloadTemplate(type) {
             const url = type === 'license' ? '/api/licenses/import-template' : `/api/assets/import-template/${type}`;
             window.location.href = url;
@@ -2699,6 +3358,7 @@
         function exportLicenses() { window.location.href = '/api/licenses/export'; }
 
         // Notifications
+        // - 알림 목록 조회 + 읽음 처리 API 호출로 상태 반영
         async function loadNotifications() {
             const res = await api.get('/api/notifications');
             document.getElementById('notificationsList').innerHTML = res.success && res.data.length ?
@@ -2717,18 +3377,47 @@
         }
 
         // Load Master Data
+        // - 기준정보(사업장/부서/사용자/카테고리/공급업체)를 병렬 조회해 전역 캐시를 채움
         async function loadMasterData() {
-            const [loc, dept, usr, cat] = await Promise.all([
-                api.get('/api/locations'), api.get('/api/departments'), api.get('/api/users'), api.get('/api/categories')
+            const [loc, dept, usr, cat, ven] = await Promise.all([
+                api.get('/api/locations'), api.get('/api/departments'), api.get('/api/users'), api.get('/api/categories'), api.get('/api/vendors')
             ]);
             if (loc.success) locations = loc.data;
             if (dept.success) departments = dept.data;
             if (usr.success) users = usr.data;
             if (cat.success) categories = cat.data;
+            if (ven.success) {
+                vendors = ven.data;
+                renderLicenseVendorFilter();
+            }
+        }
+
+        function renderLicenseVendorFilter() {
+            const select = document.getElementById('licenseVendorFilter');
+            if (!select || !vendors.length) return;
+            const selected = select.value;
+            select.innerHTML = '<option value="">전체 공급사</option>' + vendors.map(v => `<option value="${v.vendor_id}">${v.vendor_name}</option>`).join('');
+            if (selected) select.value = selected;
         }
 
         // Init
+        // - 앱 진입 시 날짜 배치 + 필수 데이터/기본 페이지 로드 순서 설정
+        function displayCurrentDate() {
+            const dateElement = document.getElementById('currentDate');
+            if (!dateElement) return;
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayName = days[now.getDay()];
+
+            dateElement.textContent = `${year}년 ${month}월 ${date}일 (${dayName})`;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            displayCurrentDate();
             loadMasterData().then(() => {
                 loadDashboard();
                 loadLocations();

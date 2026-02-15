@@ -1,11 +1,32 @@
+# AI / IDE Settings
 .agent/
+.claude/
+.gemini/
+.vscode/
+.idea/
+
+# Project Specific Docs (Internal)
 PRD.md
 AI_WORKFLOW.md
 deployment.md
-itam.db
+design-guide-foritam.md
+BACKUP_GUIDE.md
+howtowork.md
+
+# Python / Environment
 venv/
 __pycache__/
 *.pyc
-.DS_Store
+.env
+
+# Database
+itam.db
 itam_prod.db
 itam.db.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scripts
+backup_s3.sh
