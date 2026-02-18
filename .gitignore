@@ -1,5 +1,12 @@
 # AI / IDE Settings
+# Keep .agent mostly ignored, but track ExecPlan 운영 파일만 버전관리
 .agent/
+!.agent/
+.agent/*
+!.agent/PLANS.md
+!.agent/execplans/
+!.agent/execplans/EP_TEMPLATE.md
+
 .claude/
 .gemini/
 .vscode/
